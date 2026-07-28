@@ -1,0 +1,6 @@
+1. logo
+2. Welcome message
+3. OHIBU (over hills Business Unit) 
+4. In payment add (prepaid/paid/unpaid : method (cash, telephone))
+5. Ask (give descriiption to client) -OKAY
+6. services: animal feed, animal sell, training. - OKAY

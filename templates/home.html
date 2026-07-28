@@ -1,0 +1,526 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animal Food</title>
+    <!-- Latest compiled and minified CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        #central1 {
+            min-height: 99vh;
+
+            background-image: url(Images/co.png);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+
+        }
+
+        #bgCarousel {
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+        }
+
+        #bgCarousel img {
+            width: 100%;
+            height: 100vh;
+            object-fit: cover;
+        }
+
+        #all {
+            background: linear-gradient(180deg, #e2eaec 1%, #f1f6f4 40%, #e2eaec 100%);
+            min-height: 99%;
+            min-width: 99%;
+            padding: 60px 40px;
+
+
+        }
+
+        #card_info {
+            position: relative;
+            z-index: 1;
+            color: white;
+            padding: 80px;
+        }
+
+        #btn {
+            transition: 0.3s ease;
+        }
+
+        #btn:hover {
+            background-color: #38ae0d;
+            /* Green */
+            border-color: #741879;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid" id="all">
+
+        <div class="row">
+            <div class="col-md-2">
+                <div class="row py-3">
+
+                    <div class="col-sm-11">
+                        <img src="{% static 'Images/logo.png' %}" alt="" height="100%" width="100%">
+                    </div>
+                    <div class="col-sm-1"></div>
+                </div>
+                <div class="row py-3">
+                    <div class="container mt-3">
+
+
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#myModal">
+                            Animal Feed
+                        </button>
+                    </div>
+
+                    <!-- The Modal -->
+                    <div class="modal" id="myModal">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+
+                                <!-- Modal Header -->
+                                <div class="modal-header">
+                                    <h4 class="modal-title text-center">Animal Feed</h4>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+
+                                <!-- Modal body -->
+                                <div class="modal-body">
+                                    <table class="table table-striped table-hover">
+                                        <thead class="table-info">
+                                            <tr>
+                                                <th>Animal</th>
+                                                <th>Type 1</th>
+                                                <th>Type 2</th>
+                                                <th>Type 3</th>
+                                                <th>Type 4</th>
+                                                <th>Type 5</th>
+
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for animal in animals %}
+                                            <tr>
+                                                <td>{{ animal.name }}</td>
+                                                {% with feeds=animal.feed_types.all %}
+                                                <td>{% for feed in feeds|slice:"0:1" %}{{ feed.name }}{% endfor %}</td>
+                                                <td>{% for feed in feeds|slice:"1:2" %}{{ feed.name }}{% endfor %}</td>
+                                                <td>{% for feed in feeds|slice:"2:3" %}{{ feed.name }}{% endfor %}</td>
+                                                <td>{% for feed in feeds|slice:"3:4" %}{{ feed.name }}{% endfor %}</td>
+                                                <td>{% for feed in feeds|slice:"4:5" %}{{ feed.name }}{% endfor %}</td>
+                                                {% endwith %}
+                                            </tr>
+                                            {% empty %}
+                                            <tr>
+                                                <td colspan="6">No animal types added yet.</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Modal footer -->
+                                <div class="modal-footer">
+                                    <a href="">View the Stock</a>
+                                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- <div class="container mt-3">
+
+
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#myModal">
+                            Get More Info
+                        </button>
+                    </div> -->
+
+                    <!-- Trigger link -->
+<a href="#" id="openFeedModalBtn" data-bs-toggle="modal" data-bs-target="#feedModal">
+    Get More Info About Feed type
+</a>
+
+<!-- Modal -->
+<div class="modal fade" id="feedModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Select Animal & Feed Type</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+
+        <!-- Step 1: Animal select -->
+        <div class="mb-3">
+          <label for="animalSelect" class="form-label">Select Animal</label>
+          <select id="animalSelect" class="form-select">
+            <option value="">-- Choose an animal --</option>
+            {% for animal in animals %}
+              <option value="{{ animal.id }}">{{ animal.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Step 2: Feed types (populated via JS) -->
+        <div class="mb-3" id="feedTypesWrapper" style="display:none;">
+          <label class="form-label">Feed Types</label>
+          <div id="feedTypesList" class="list-group"></div>
+        </div>
+
+        <!-- Step 3: Description -->
+        <div class="mb-3" id="descriptionWrapper" style="display:none;">
+          <label class="form-label">Description</label>
+          <p id="feedDescriptionText" class="border rounded p-2 bg-light"></p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const animalSelect = document.getElementById('animalSelect');
+    const feedTypesWrapper = document.getElementById('feedTypesWrapper');
+    const feedTypesList = document.getElementById('feedTypesList');
+    const descriptionWrapper = document.getElementById('descriptionWrapper');
+    const feedDescriptionText = document.getElementById('feedDescriptionText');
+
+    // Reset modal state each time it's reopened
+    document.getElementById('feedModal').addEventListener('show.bs.modal', function () {
+        animalSelect.value = '';
+        feedTypesWrapper.style.display = 'none';
+        descriptionWrapper.style.display = 'none';
+        feedTypesList.innerHTML = '';
+        feedDescriptionText.textContent = '';
+    });
+
+    // Step 1 -> Step 2: when animal changes, fetch its feed types
+    animalSelect.addEventListener('change', function () {
+        const animalId = this.value;
+        descriptionWrapper.style.display = 'none';
+
+        if (!animalId) {
+            feedTypesWrapper.style.display = 'none';
+            return;
+        }
+
+        fetch(`/feeds/animal/${animalId}/feed-types/`)
+            .then(response => response.json())
+            .then(data => {
+                feedTypesList.innerHTML = '';
+
+                if (data.feed_types.length === 0) {
+                    feedTypesList.innerHTML = '<p class="text-muted mb-0">No feed types for this animal.</p>';
+                } else {
+                    data.feed_types.forEach(ft => {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'list-group-item list-group-item-action';
+                        btn.textContent = ft.name;
+                        btn.dataset.feedtypeId = ft.id;
+                        btn.addEventListener('click', () => loadDescription(ft.id, btn));
+                        feedTypesList.appendChild(btn);
+                    });
+                }
+
+                feedTypesWrapper.style.display = 'block';
+            })
+            .catch(err => console.error('Error fetching feed types:', err));
+    });
+
+    // Step 2 -> Step 3: when a feed type is clicked, fetch its description
+    function loadDescription(feedtypeId, clickedBtn) {
+        // highlight active selection
+        feedTypesList.querySelectorAll('.list-group-item').forEach(el => el.classList.remove('active'));
+        clickedBtn.classList.add('active');
+
+        fetch(`/feeds/feed-type/${feedtypeId}/description/`)
+            .then(response => response.json())
+            .then(data => {
+                feedDescriptionText.textContent = data.description;
+                descriptionWrapper.style.display = 'block';
+            })
+            .catch(err => console.error('Error fetching description:', err));
+    }
+});
+</script>
+                </div>
+
+
+
+                <div class="row">
+                    <div class="container mt-3">
+
+                        <div id="accordion">
+                            <div class="card">
+                                <div class="card-header bg-info">
+                                    <a class="btn" data-bs-toggle="collapse" href="#collapseOne">
+                                        Our Services
+                                    </a>
+                                </div>
+                                <div id="collapseOne" class="collapse show" data-bs-parent="#accordion">
+                                    <div class="card-body bg-secondary" id="all">
+                                        <p><a href="#" data-bs-toggle="modal" data-bs-target="#myModal">Animal feed</a> </p>
+                                        <p><a href="#">Livestocs Selling</a> </p>
+                                        <p> <a href="#">Training on Livestock</a></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            
+                            <!-- <div class="card">
+                                <div class="card-header bg-info">
+                                    <a class="collapsed btn" data-bs-toggle="collapse" href="#collapseTwo">
+                                        Get More Info
+                                    </a>
+                                </div>
+                                <div id="collapseTwo" class="collapse" data-bs-parent="#accordion">
+                                    <div class="card-body" id="all">
+                                        <p>xxxxxxxxxxx</p>
+                                        <p>xxxxxxxxxxx</p>
+                                        <p>xxxxxxxxxxx</p>
+                                        <p>xxxxxxxxxxx</p>
+                                    </div>
+                                </div>
+                            </div> -->
+                            <div class="card">
+                                <div class="card-header bg-info">
+                                    <a class="collapsed btn " data-bs-toggle="collapse" href="#collapseThree">
+                                        xxxxxxxxxxx
+                                    </a>
+                                </div>
+                                <div id="collapseThree" class="collapse" data-bs-parent="#accordion">
+                                    <div class="card-body" id="all">
+                                        <p>xxxxxxxxxxx</p>
+                                        <p>xxxxxxxxxxx</p>
+                                        <p>xxxxxxxxxxx</p>
+                                        <p>xxxxxxxxxxx</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-7">
+
+                <!-- Carousel -->
+                <div id="demo" class="carousel slide" data-bs-ride="carousel">
+
+                    <!-- Indicators/dots -->
+                    <div class="carousel-indicators">
+                        <button type="button" data-bs-target="#demo" data-bs-slide-to="0" class="active"></button>
+                        <button type="button" data-bs-target="#demo" data-bs-slide-to="1"></button>
+                        <button type="button" data-bs-target="#demo" data-bs-slide-to="2"></button>
+                    </div>
+
+                    <!-- The slideshow/carousel -->
+                    <div class="carousel-inner">
+                        <!-- cow -->
+                        <div class="carousel-item active">
+                            <img src="{% static 'Images/cow.png' %}" alt="Los Angeles" class="d-block"
+                                style="width:100%">
+                            <div class="carousel-caption">
+                                <h3>COW</h3>
+                                <p>XXXXX</p>
+                            </div>
+                        </div>
+                        <!-- DOG -->
+                        <div class="carousel-item">
+                            <img src="{% static 'Images/dog.png' %}" alt="Chicago" class="d-block" style="width:100%">
+                            <div class="carousel-caption">
+                                <h3>DOG</h3>
+                                <p>XXXX</p>
+                            </div>
+                        </div>
+                        <!-- CAT -->
+                        <div class="carousel-item">
+                            <img src="{% static 'Images/cat.png'  %}" alt="Chicago" class="d-block" style="width:100%">
+                            <div class="carousel-caption">
+                                <h3>CAT</h3>
+                                <p>XXXXxxx</p>
+                            </div>
+                        </div>
+                        <!-- CHICKEN -->
+                        <div class="carousel-item">
+                            <img src="{% static 'Images/chicken.png' %}" alt="Chicago" class="d-block"
+                                style="width:100%">
+                            <div class="carousel-caption">
+                                <h3>CHICKEN</h3>
+                                <p>XXXXXXXXXX</p>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Left and right controls/icons -->
+                    <button class="carousel-control-prev" type="button" data-bs-target="#demo" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#demo" data-bs-slide="next">
+                        <span class="carousel-control-next-icon"></span>
+                    </button>
+                </div>
+
+
+
+
+
+
+            </div>
+            <div class="col-md-3">
+                <div class="card" id="card-info">
+                    <!-- <div class="card-header">Hello</div> -->
+                    <div class="card-body">
+                        <h3>WELCOME TO OHIBU Animal Feed</h3>
+                        <hr>
+                        <h6>Over Hills Business Unit</h6>
+                        <p>best animal feed, quick services, quick delivery</p>
+                        <div class="card-footer">
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                data-bs-target="#viewStore" id="btn">Order Now</button>
+                            <button type="button" class="btn btn-secondary" id="btn"><a
+                                    href="http://127.0.0.1:8000/admin">Login</a> </button>
+                        </div>
+                        <!-- view more store -->
+
+                        <!-- The Modal -->
+                        <div class="modal" id="viewStore">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+
+                                    <!-- Modal Header -->
+                                    <div class="modal-header">
+                                        <h4 class="modal-title">Order Page</h4>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+
+                                    <!-- Modal body -->
+                                    <div class="modal-body">
+                                        {% if messages %}
+                                        {% for message in messages %}
+                                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                                        {% endfor %}
+                                        {% endif %}
+
+                                        <form method="post" action="{% url 'order_form' %}">
+                                            {% csrf_token %}
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Feed Type</label>
+                                                <select name="product" id="id_product" class="form-select" required>
+                                                    <option value="">-- Select a feed type --</option>
+                                                    {% for product in products %}
+                                                    <option value="{{ product.id }}" data-price="{{ product.default_price }}">
+    {{ product.feed_type.animal.name }} - {{ product.feed_type.name }}
+</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Quantity</label>
+                                                <input type="number" step="0.01" min="0.01" name="quantity"
+                                                    id="id_quantity" class="form-control" required>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Unit Price Per kg</label>
+                                                <input type="text" id="id_unit_price" class="form-control" readonly>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Total Price</label>
+                                                <input type="text" id="id_total_price" class="form-control" readonly>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Full Name</label>
+                                                <input type="text" name="full_name" class="form-control" required>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Telephone</label>
+                                                <input type="text" name="telephone" class="form-control" required>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">District</label>
+                                                <input type="text" name="district" class="form-control" required>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Sector</label>
+                                                <input type="text" name="sector" class="form-control" required>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Cell</label>
+                                                <input type="text" name="cell" class="form-control" required>
+                                            </div>
+
+                                            <button type="submit" class="btn btn-success">Order Now</button>
+                                        </form>
+                                    </div>
+                                    <script>
+document.addEventListener('DOMContentLoaded', function () {
+    const productSelect = document.getElementById('id_product');
+    const quantityInput = document.getElementById('id_quantity');
+    const unitPriceField = document.getElementById('id_unit_price');
+    const totalPriceField = document.getElementById('id_total_price');
+
+    function updatePrices() {
+        const selectedOption = productSelect.options[productSelect.selectedIndex];
+        const price = parseFloat(selectedOption.getAttribute('data-price')) || 0;
+        const qty = parseFloat(quantityInput.value) || 0;
+
+        unitPriceField.value = price.toFixed(2);
+        totalPriceField.value = (price * qty).toFixed(2);
+    }
+
+    productSelect.addEventListener('change', updatePrices);
+    quantityInput.addEventListener('input', updatePrices);
+});
+</script>
+
+                                    <!-- Modal footer -->
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-danger"
+                                            data-bs-dismiss="modal">Close</button>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row" id="all">
+            <p class="text-center">Our Partners</p>
+            <div class="col-md-4">AiRAC</div>
+            <div class="col-md-4">AiRAC</div>
+            <div class="col-md-4">AiRAC</div>
+        </div>
+    </div>
+
+
+</body>
+
+</html>
