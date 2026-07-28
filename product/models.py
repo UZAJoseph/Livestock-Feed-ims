@@ -3,8 +3,12 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
+from django.utils import timezone
 
 
+
+
+#add model
 class District(models.Model):
     name = models.CharField(max_length=100, unique=True)
 
@@ -82,6 +86,13 @@ class Product(models.Model):
         return f"{self.store.name} - {self.feed_type} - {self.amount}{self.measure.abbreviation or self.measure.name} - {self.default_price}"
 
 
+class PaymentStatus(models.TextChoices):
+    PAID = 'paid', 'Paid'
+    UNPAID = 'unpaid', 'Unpaid'
+    PREPAID = 'prepaid', 'Prepaid'
+
+
+
 class Order(models.Model):
     class Status(models.TextChoices):
         PENDING = 'pending', 'Pending'
@@ -120,6 +131,35 @@ class Order(models.Model):
             self.unit_price = self.product.default_price
         super().save(*args, **kwargs)
 
+    @transaction.atomic
+    def confirm(self, confirmed_by, payment_status):
+        """Manager/admin confirms the order and decides the payment status."""
+        if self.status != Order.Status.PENDING:
+            raise ValidationError("Only pending orders can be confirmed.")
+
+        if payment_status not in PaymentStatus.values:
+            raise ValidationError("Invalid payment status.")
+
+        sale = Sale.objects.create(
+            store=self.product.store,
+            sold_by=confirmed_by,
+            order=self,
+            payment_status=payment_status,
+        )
+
+        SaleItem.objects.create(
+            sale=sale,
+            product=self.product,
+            quantity=self.quantity,
+            unit_price=self.unit_price,
+        )  # deducts Product.quantity automatically via SaleItem.save()
+
+        self.status = Order.Status.CONFIRMED
+        self.confirmed_by = confirmed_by
+        self.confirmed_at = timezone.now()
+        self.save(update_fields=['status', 'confirmed_by', 'confirmed_at'])
+
+        return sale
 
 class Sale(models.Model):
     store = models.ForeignKey(Store, on_delete=models.PROTECT, related_name='sales')
@@ -128,6 +168,10 @@ class Sale(models.Model):
         on_delete=models.PROTECT,
         related_name='sales_made',
     )
+    order = models.OneToOneField(
+        Order, on_delete=models.SET_NULL, null=True, blank=True, related_name='sale'
+    )
+    payment_status = models.CharField(max_length=10, choices=PaymentStatus.choices)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -136,6 +180,23 @@ class Sale(models.Model):
     @property
     def total(self):
         return sum(item.subtotal for item in self.items.all())
+
+
+# class Sale(models.Model):
+#     store = models.ForeignKey(Store, on_delete=models.PROTECT, related_name='sales')
+#     sold_by = models.ForeignKey(
+#         settings.AUTH_USER_MODEL,
+#         on_delete=models.PROTECT,
+#         related_name='sales_made',
+#     )
+#     created_at = models.DateTimeField(auto_now_add=True)
+
+#     def __str__(self):
+#         return f"Sale #{self.pk} - {self.store} - {self.created_at:%Y-%m-%d %H:%M}"
+
+#     @property
+#     def total(self):
+#         return sum(item.subtotal for item in self.items.all())
 
 
 class SaleItem(models.Model):
