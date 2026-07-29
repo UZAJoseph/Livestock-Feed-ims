@@ -11,7 +11,7 @@
 
     <!-- Latest compiled JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <style>
         #central1 {
             min-height: 99vh;
@@ -153,114 +153,114 @@
                     </div> -->
 
                     <!-- Trigger link -->
-<a href="#" id="openFeedModalBtn" data-bs-toggle="modal" data-bs-target="#feedModal">
-    Get More Info About Feed type
-</a>
+                    <a href="#" id="openFeedModalBtn" data-bs-toggle="modal" data-bs-target="#feedModal">
+                        Get More Info About Feed type
+                    </a>
 
-<!-- Modal -->
-<div class="modal fade" id="feedModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Select Animal & Feed Type</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
+                    <!-- Modal -->
+                    <div class="modal fade" id="feedModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Select Animal & Feed Type</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
 
-        <!-- Step 1: Animal select -->
-        <div class="mb-3">
-          <label for="animalSelect" class="form-label">Select Animal</label>
-          <select id="animalSelect" class="form-select">
-            <option value="">-- Choose an animal --</option>
-            {% for animal in animals %}
-              <option value="{{ animal.id }}">{{ animal.name }}</option>
-            {% endfor %}
-          </select>
-        </div>
+                                    <!-- Step 1: Animal select -->
+                                    <div class="mb-3">
+                                        <label for="animalSelect" class="form-label">Select Animal</label>
+                                        <select id="animalSelect" class="form-select">
+                                            <option value="">-- Choose an animal --</option>
+                                            {% for animal in animals %}
+                                            <option value="{{ animal.id }}">{{ animal.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
 
-        <!-- Step 2: Feed types (populated via JS) -->
-        <div class="mb-3" id="feedTypesWrapper" style="display:none;">
-          <label class="form-label">Feed Types</label>
-          <div id="feedTypesList" class="list-group"></div>
-        </div>
+                                    <!-- Step 2: Feed types (populated via JS) -->
+                                    <div class="mb-3" id="feedTypesWrapper" style="display:none;">
+                                        <label class="form-label">Feed Types</label>
+                                        <div id="feedTypesList" class="list-group"></div>
+                                    </div>
 
-        <!-- Step 3: Description -->
-        <div class="mb-3" id="descriptionWrapper" style="display:none;">
-          <label class="form-label">Description</label>
-          <p id="feedDescriptionText" class="border rounded p-2 bg-light"></p>
-        </div>
+                                    <!-- Step 3: Description -->
+                                    <div class="mb-3" id="descriptionWrapper" style="display:none;">
+                                        <label class="form-label">Description</label>
+                                        <p id="feedDescriptionText" class="border rounded p-2 bg-light"></p>
+                                    </div>
 
-      </div>
-    </div>
-  </div>
-</div>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const animalSelect = document.getElementById('animalSelect');
-    const feedTypesWrapper = document.getElementById('feedTypesWrapper');
-    const feedTypesList = document.getElementById('feedTypesList');
-    const descriptionWrapper = document.getElementById('descriptionWrapper');
-    const feedDescriptionText = document.getElementById('feedDescriptionText');
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            const animalSelect = document.getElementById('animalSelect');
+                            const feedTypesWrapper = document.getElementById('feedTypesWrapper');
+                            const feedTypesList = document.getElementById('feedTypesList');
+                            const descriptionWrapper = document.getElementById('descriptionWrapper');
+                            const feedDescriptionText = document.getElementById('feedDescriptionText');
 
-    // Reset modal state each time it's reopened
-    document.getElementById('feedModal').addEventListener('show.bs.modal', function () {
-        animalSelect.value = '';
-        feedTypesWrapper.style.display = 'none';
-        descriptionWrapper.style.display = 'none';
-        feedTypesList.innerHTML = '';
-        feedDescriptionText.textContent = '';
-    });
+                            // Reset modal state each time it's reopened
+                            document.getElementById('feedModal').addEventListener('show.bs.modal', function () {
+                                animalSelect.value = '';
+                                feedTypesWrapper.style.display = 'none';
+                                descriptionWrapper.style.display = 'none';
+                                feedTypesList.innerHTML = '';
+                                feedDescriptionText.textContent = '';
+                            });
 
-    // Step 1 -> Step 2: when animal changes, fetch its feed types
-    animalSelect.addEventListener('change', function () {
-        const animalId = this.value;
-        descriptionWrapper.style.display = 'none';
+                            // Step 1 -> Step 2: when animal changes, fetch its feed types
+                            animalSelect.addEventListener('change', function () {
+                                const animalId = this.value;
+                                descriptionWrapper.style.display = 'none';
 
-        if (!animalId) {
-            feedTypesWrapper.style.display = 'none';
-            return;
-        }
+                                if (!animalId) {
+                                    feedTypesWrapper.style.display = 'none';
+                                    return;
+                                }
 
-        fetch(`/feeds/animal/${animalId}/feed-types/`)
-            .then(response => response.json())
-            .then(data => {
-                feedTypesList.innerHTML = '';
+                                fetch(`/feeds/animal/${animalId}/feed-types/`)
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        feedTypesList.innerHTML = '';
 
-                if (data.feed_types.length === 0) {
-                    feedTypesList.innerHTML = '<p class="text-muted mb-0">No feed types for this animal.</p>';
-                } else {
-                    data.feed_types.forEach(ft => {
-                        const btn = document.createElement('button');
-                        btn.type = 'button';
-                        btn.className = 'list-group-item list-group-item-action';
-                        btn.textContent = ft.name;
-                        btn.dataset.feedtypeId = ft.id;
-                        btn.addEventListener('click', () => loadDescription(ft.id, btn));
-                        feedTypesList.appendChild(btn);
-                    });
-                }
+                                        if (data.feed_types.length === 0) {
+                                            feedTypesList.innerHTML = '<p class="text-muted mb-0">No feed types for this animal.</p>';
+                                        } else {
+                                            data.feed_types.forEach(ft => {
+                                                const btn = document.createElement('button');
+                                                btn.type = 'button';
+                                                btn.className = 'list-group-item list-group-item-action';
+                                                btn.textContent = ft.name;
+                                                btn.dataset.feedtypeId = ft.id;
+                                                btn.addEventListener('click', () => loadDescription(ft.id, btn));
+                                                feedTypesList.appendChild(btn);
+                                            });
+                                        }
 
-                feedTypesWrapper.style.display = 'block';
-            })
-            .catch(err => console.error('Error fetching feed types:', err));
-    });
+                                        feedTypesWrapper.style.display = 'block';
+                                    })
+                                    .catch(err => console.error('Error fetching feed types:', err));
+                            });
 
-    // Step 2 -> Step 3: when a feed type is clicked, fetch its description
-    function loadDescription(feedtypeId, clickedBtn) {
-        // highlight active selection
-        feedTypesList.querySelectorAll('.list-group-item').forEach(el => el.classList.remove('active'));
-        clickedBtn.classList.add('active');
+                            // Step 2 -> Step 3: when a feed type is clicked, fetch its description
+                            function loadDescription(feedtypeId, clickedBtn) {
+                                // highlight active selection
+                                feedTypesList.querySelectorAll('.list-group-item').forEach(el => el.classList.remove('active'));
+                                clickedBtn.classList.add('active');
 
-        fetch(`/feeds/feed-type/${feedtypeId}/description/`)
-            .then(response => response.json())
-            .then(data => {
-                feedDescriptionText.textContent = data.description;
-                descriptionWrapper.style.display = 'block';
-            })
-            .catch(err => console.error('Error fetching description:', err));
-    }
-});
-</script>
+                                fetch(`/feeds/feed-type/${feedtypeId}/description/`)
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        feedDescriptionText.textContent = data.description;
+                                        descriptionWrapper.style.display = 'block';
+                                    })
+                                    .catch(err => console.error('Error fetching description:', err));
+                            }
+                        });
+                    </script>
                 </div>
 
 
@@ -277,14 +277,15 @@ document.addEventListener('DOMContentLoaded', function () {
                                 </div>
                                 <div id="collapseOne" class="collapse show" data-bs-parent="#accordion">
                                     <div class="card-body bg-secondary" id="all">
-                                        <p><a href="#" data-bs-toggle="modal" data-bs-target="#myModal">Animal feed</a> </p>
+                                        <p><a href="#" data-bs-toggle="modal" data-bs-target="#myModal">Animal feed</a>
+                                        </p>
                                         <p><a href="#">Livestocs Selling</a> </p>
                                         <p> <a href="#">Training on Livestock</a></p>
                                     </div>
                                 </div>
                             </div>
 
-                           
+
                             <div class="card">
                                 <div class="card-header bg-info">
                                     <a class="collapsed btn " data-bs-toggle="collapse" href="#collapseThree">
@@ -383,7 +384,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 data-bs-target="#viewStore" id="btn">Order Now</button>
                             <button type="button" class="btn btn-secondary" id="btn"><a
                                     href="http://127.0.0.1:8000/admin">Login</a> </button>
-                                    <button type="button" class="btn btn-secondary" id="btn"><a
+                            <button type="button" class="btn btn-secondary" id="btn"><a
                                     href="http://127.0.0.1:8000/reports">Reports</a> </button>
                         </div>
                         <!-- view more store -->
@@ -392,7 +393,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div class="modal" id="viewStore">
                             <div class="modal-dialog">
                                 <div class="modal-content">
-
                                     <!-- Modal Header -->
                                     <div class="modal-header">
                                         <h4 class="modal-title">Order Page</h4>
@@ -411,22 +411,40 @@ document.addEventListener('DOMContentLoaded', function () {
                                             {% csrf_token %}
 
                                             <div class="mb-3">
-                                                <label class="form-label">Feed Type</label>
-                                                <select name="product" id="id_product" class="form-select" required>
-                                                    <option value="">-- Select a feed type --</option>
-                                                    {% for product in products %}
-                                                    <option value="{{ product.id }}" data-price="{{ product.default_price }}">
-    {{ product.feed_type.animal.name }} - {{ product.feed_type.name }}
-</option>
-                                                    {% endfor %}
+                                                <label class="form-label">Animal</label>
+                                                <select id="id_animal" class="form-select" required>
+                                                    <option value="">-- Select an animal --</option>
                                                 </select>
                                             </div>
 
                                             <div class="mb-3">
-                                                <label class="form-label">Quantity</label>
-                                                <input type="number" step="0.01" min="0.01" name="quantity"
-                                                    id="id_quantity" class="form-control" required>
+                                                <label class="form-label">Feed Type</label>
+                                                <select id="id_feed_type" class="form-select" required disabled>
+                                                    <option value="">-- Select feed type --</option>
+                                                </select>
                                             </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Package</label>
+                                                <select name="product" id="id_product" class="form-select" required
+                                                    disabled>
+                                                    <option value="">-- Select a package --</option>
+                                                </select>
+                                            </div>
+
+                                            <!-- source data for the cascade, hidden from the user -->
+                                            <select id="products-data" style="display:none">
+                                                {% for product in products %}
+                                                <option value="{{ product.id }}"
+                                                    data-animal-id="{{ product.feed_type.animal.id }}"
+                                                    data-animal-name="{{ product.feed_type.animal.name }}"
+                                                    data-feedtype-id="{{ product.feed_type.id }}"
+                                                    data-feedtype-name="{{ product.feed_type.name }}"
+                                                    data-price="{{ product.default_price }}"
+                                                    data-label="{{ product.amount }}{{ product.measure.abbreviation }} - {{ product.default_price }} RWF">
+                                                </option>
+                                                {% endfor %}
+                                            </select>
 
                                             <div class="mb-3">
                                                 <label class="form-label">Unit Price Per kg</label>
@@ -436,6 +454,12 @@ document.addEventListener('DOMContentLoaded', function () {
                                             <div class="mb-3">
                                                 <label class="form-label">Total Price</label>
                                                 <input type="text" id="id_total_price" class="form-control" readonly>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Quantity</label>
+                                                <input type="number" step="0.01" min="0.01" name="quantity"
+                                                    id="id_quantity" class="form-control" required>
                                             </div>
 
                                             <div class="mb-3">
@@ -466,26 +490,105 @@ document.addEventListener('DOMContentLoaded', function () {
                                             <button type="submit" class="btn btn-success">Order Now</button>
                                         </form>
                                     </div>
+
                                     <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const productSelect = document.getElementById('id_product');
-    const quantityInput = document.getElementById('id_quantity');
-    const unitPriceField = document.getElementById('id_unit_price');
-    const totalPriceField = document.getElementById('id_total_price');
+                                        document.addEventListener('DOMContentLoaded', function () {
+                                            const dataSelect = document.getElementById('products-data');
+                                            const productOptions = Array.from(dataSelect.options);
 
-    function updatePrices() {
-        const selectedOption = productSelect.options[productSelect.selectedIndex];
-        const price = parseFloat(selectedOption.getAttribute('data-price')) || 0;
-        const qty = parseFloat(quantityInput.value) || 0;
+                                            const animalSelect = document.getElementById('id_animal');
+                                            const feedTypeSelect = document.getElementById('id_feed_type');
+                                            const productSelect = document.getElementById('id_product');
+                                            const quantityInput = document.getElementById('id_quantity');
+                                            const unitPriceField = document.getElementById('id_unit_price');
+                                            const totalPriceField = document.getElementById('id_total_price');
 
-        unitPriceField.value = price.toFixed(2);
-        totalPriceField.value = (price * qty).toFixed(2);
-    }
+                                            // Build unique animal list
+                                            const animals = [];
+                                            productOptions.forEach(opt => {
+                                                const id = opt.dataset.animalId;
+                                                const name = opt.dataset.animalName;
+                                                if (!animals.some(a => a.id === id)) {
+                                                    animals.push({ id, name });
+                                                }
+                                            });
+                                            animals.forEach(animal => {
+                                                const option = document.createElement('option');
+                                                option.value = animal.id;
+                                                option.textContent = animal.name;
+                                                animalSelect.appendChild(option);
+                                            });
 
-    productSelect.addEventListener('change', updatePrices);
-    quantityInput.addEventListener('input', updatePrices);
-});
-</script>
+                                            animalSelect.addEventListener('change', function () {
+                                                const animalId = this.value;
+                                                feedTypeSelect.innerHTML = '<option value="">-- Select feed type --</option>';
+                                                productSelect.innerHTML = '<option value="">-- Select a package --</option>';
+                                                unitPriceField.value = '';
+                                                totalPriceField.value = '';
+                                                productSelect.disabled = true;
+
+                                                if (!animalId) {
+                                                    feedTypeSelect.disabled = true;
+                                                    return;
+                                                }
+
+                                                const feedTypes = [];
+                                                productOptions.forEach(opt => {
+                                                    if (opt.dataset.animalId === animalId) {
+                                                        const id = opt.dataset.feedtypeId;
+                                                        const name = opt.dataset.feedtypeName;
+                                                        if (!feedTypes.some(f => f.id === id)) {
+                                                            feedTypes.push({ id, name });
+                                                        }
+                                                    }
+                                                });
+                                                feedTypes.forEach(feedType => {
+                                                    const option = document.createElement('option');
+                                                    option.value = feedType.id;
+                                                    option.textContent = feedType.name;
+                                                    feedTypeSelect.appendChild(option);
+                                                });
+
+                                                feedTypeSelect.disabled = false;
+                                            });
+
+                                            feedTypeSelect.addEventListener('change', function () {
+                                                const feedTypeId = this.value;
+                                                productSelect.innerHTML = '<option value="">-- Select a package --</option>';
+                                                unitPriceField.value = '';
+                                                totalPriceField.value = '';
+
+                                                if (!feedTypeId) {
+                                                    productSelect.disabled = true;
+                                                    return;
+                                                }
+
+                                                productOptions.forEach(opt => {
+                                                    if (opt.dataset.feedtypeId === feedTypeId) {
+                                                        const option = document.createElement('option');
+                                                        option.value = opt.value;
+                                                        option.textContent = opt.dataset.label;
+                                                        option.setAttribute('data-price', opt.dataset.price);
+                                                        productSelect.appendChild(option);
+                                                    }
+                                                });
+
+                                                productSelect.disabled = false;
+                                            });
+
+                                            function updatePrices() {
+                                                const selectedOption = productSelect.options[productSelect.selectedIndex];
+                                                const price = parseFloat(selectedOption ? selectedOption.getAttribute('data-price') : 0) || 0;
+                                                const qty = parseFloat(quantityInput.value) || 0;
+
+                                                unitPriceField.value = price.toFixed(2);
+                                                totalPriceField.value = (price * qty).toFixed(2);
+                                            }
+
+                                            productSelect.addEventListener('change', updatePrices);
+                                            quantityInput.addEventListener('input', updatePrices);
+                                        });
+                                    </script>
 
                                     <!-- Modal footer -->
                                     <div class="modal-footer">
