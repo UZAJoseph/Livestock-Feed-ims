@@ -1,7 +1,9 @@
 from django.contrib import admin, messages
 from django.utils import timezone
+from django.shortcuts import render
+from django import forms
 from django.core.exceptions import ValidationError
-from .models import District, Sector, Store, Store, FeedType, Animal, Measure, Product, Order, Sale, SaleItem
+from .models import District, Sector, Store, Store, FeedType, Animal, Measure, Product, Order, Sale, SaleItem, PaymentMethod, PaymentStatus
 
 
 # Register your models here.
@@ -15,50 +17,114 @@ class SaleItemInline(admin.TabularInline):
 
 @admin.register(Sale)
 class SaleAdmin(admin.ModelAdmin):
-    list_display = ('id', 'store', 'sold_by', 'created_at', 'total')
-    list_filter = ('store', 'sold_by')
-    readonly_fields = ('store', 'sold_by', 'created_at')
+    list_display = ('id', 'store', 'sold_by','payment_status', 'payment_method', 'created_at', 'total')
+    list_filter = ('payment_status', 'payment_method','store', 'sold_by')
+    readonly_fields = ('store', 'sold_by', 'payment_status', 'payment_method','created_at')
     inlines = [SaleItemInline]
 
     def has_add_permission(self, request):
         return False  # Sales should only be created via order confirmation, not manually
 
-    
+
+
+
+class ConfirmOrderForm(forms.Form):
+    _selected_action = forms.CharField(widget=forms.MultipleHiddenInput)
+    payment_status = forms.ChoiceField(choices=PaymentStatus.choices)
+    payment_method = forms.ChoiceField(choices=PaymentMethod.choices)
+
 
 @admin.action(description="Confirm selected orders (deduct stock & record sale)")
 def confirm_orders(modeladmin, request, queryset):
-    confirmed_count = 0
-    skipped_count = 0
+    form = None
 
-    for order in queryset:
-        if order.status != Order.Status.PENDING:
-            skipped_count += 1
-            continue
+    if 'apply' in request.POST:
+        form = ConfirmOrderForm(request.POST)
+        if form.is_valid():
+            payment_status = form.cleaned_data['payment_status']
+            payment_method = form.cleaned_data['payment_method']
 
-        try:
-            sale = Sale.objects.create(store=order.product.store, sold_by=request.user)
-            SaleItem.objects.create(
-                sale=sale,
-                product=order.product,
-                quantity=order.quantity,
-                unit_price=order.unit_price,
-            )
+            confirmed_count = 0
+            skipped_count = 0
 
-            order.status = Order.Status.CONFIRMED
-            order.confirmed_by = request.user
-            order.confirmed_at = timezone.now()
-            order.save(update_fields=['status', 'confirmed_by', 'confirmed_at'])
+            for order in queryset:
+                if order.status != Order.Status.PENDING:
+                    skipped_count += 1
+                    continue
+                try:
+                    order.confirm(
+                        confirmed_by=request.user,
+                        payment_status=payment_status,
+                        payment_method=payment_method,
+                    )
+                    confirmed_count += 1
+                except ValidationError as e:
+                    skipped_count += 1
+                    messages.warning(request, f"Order #{order.pk} skipped: {e}")
 
-            confirmed_count += 1
+            if confirmed_count:
+                messages.success(
+                    request,
+                    f"{confirmed_count} order(s) confirmed — stock updated, sales recorded."
+                )
+            if skipped_count:
+                messages.warning(
+                    request,
+                    f"{skipped_count} order(s) skipped (already processed or insufficient stock)."
+                )
+            return None  # back to the changelist
 
-        except ValidationError as e:
-            skipped_count += 1
-            messages.warning(request, f"Order #{order.pk} skipped: {e.message}")
+    if not form:
+        form = ConfirmOrderForm(
+            initial={'_selected_action': queryset.values_list('pk', flat=True)}
+        )
 
-    if confirmed_count:
-        messages.success(request, f"{confirmed_count} order(s) confirmed — stock updated, sales recorded.")
-    if skipped_count:
-        messages.warning(request, f"{skipped_count} order(s) skipped (already processed or insufficient stock).")
+    return render(
+        request,
+        'confirm_orders_intermediate.html',
+        context={
+            'orders': queryset,
+            'form': form,
+            'title': 'Confirm Orders',
+            'action_checkbox_name': admin.helpers.ACTION_CHECKBOX_NAME,
+        },
+    )
+    
+
+# @admin.action(description="Confirm selected orders (deduct stock & record sale)")
+# def confirm_orders(modeladmin, request, queryset):
+#     confirmed_count = 0
+#     skipped_count = 0
+
+#     for order in queryset:
+#         if order.status != Order.Status.PENDING:
+#             skipped_count += 1
+#             continue
+
+#         try:
+#             sale = Sale.objects.create(store=order.product.store, sold_by=request.user)
+#             SaleItem.objects.create(
+#                 sale=sale,
+#                 product=order.product,
+#                 quantity=order.quantity,
+#                 unit_price=order.unit_price,
+#             )
+
+#             order.status = Order.Status.CONFIRMED
+#             order.confirmed_by = request.user
+#             order.confirmed_at = timezone.now()
+#             order.save(update_fields=['status', 'confirmed_by', 'confirmed_at'])
+
+#             confirmed_count += 1
+
+#         except ValidationError as e:
+#             skipped_count += 1
+#             messages.warning(request, f"Order #{order.pk} skipped: {e.message}")
+
+#     if confirmed_count:
+#         messages.success(request, f"{confirmed_count} order(s) confirmed — stock updated, sales recorded.")
+#     if skipped_count:
+#         messages.warning(request, f"{skipped_count} order(s) skipped (already processed or insufficient stock).")
 
 
 @admin.register(Order)
