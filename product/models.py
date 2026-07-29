@@ -91,6 +91,12 @@ class PaymentStatus(models.TextChoices):
     UNPAID = 'unpaid', 'Unpaid'
     PREPAID = 'prepaid', 'Prepaid'
 
+class PaymentMethod(models.TextChoices):
+    CASH ='cash', 'Cash'
+    MOBILE_MONEY = 'mobile_money', 'Mobile Money'
+    BANK_TRANSFER = 'bank_transfer', 'Bank Transfer'
+    CARD = 'card', 'Card'
+    OTHER = 'other', 'Other'
 
 
 class Order(models.Model):
@@ -132,7 +138,7 @@ class Order(models.Model):
         super().save(*args, **kwargs)
 
     @transaction.atomic
-    def confirm(self, confirmed_by, payment_status):
+    def confirm(self, confirmed_by, payment_status, payment_method):
         """Manager/admin confirms the order and decides the payment status."""
         if self.status != Order.Status.PENDING:
             raise ValidationError("Only pending orders can be confirmed.")
@@ -140,11 +146,15 @@ class Order(models.Model):
         if payment_status not in PaymentStatus.values:
             raise ValidationError("Invalid payment status.")
 
+        if payment_method not in PaymentMethod.values:
+            raise ValidationError('Invalid Payment method')
+
         sale = Sale.objects.create(
             store=self.product.store,
             sold_by=confirmed_by,
             order=self,
             payment_status=payment_status,
+            payment_method = payment_method,
         )
 
         SaleItem.objects.create(
@@ -172,6 +182,7 @@ class Sale(models.Model):
         Order, on_delete=models.SET_NULL, null=True, blank=True, related_name='sale'
     )
     payment_status = models.CharField(max_length=10, choices=PaymentStatus.choices)
+    payment_method = models.CharField(max_length=20, choices=PaymentMethod.choices)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -181,22 +192,6 @@ class Sale(models.Model):
     def total(self):
         return sum(item.subtotal for item in self.items.all())
 
-
-# class Sale(models.Model):
-#     store = models.ForeignKey(Store, on_delete=models.PROTECT, related_name='sales')
-#     sold_by = models.ForeignKey(
-#         settings.AUTH_USER_MODEL,
-#         on_delete=models.PROTECT,
-#         related_name='sales_made',
-#     )
-#     created_at = models.DateTimeField(auto_now_add=True)
-
-#     def __str__(self):
-#         return f"Sale #{self.pk} - {self.store} - {self.created_at:%Y-%m-%d %H:%M}"
-
-#     @property
-#     def total(self):
-#         return sum(item.subtotal for item in self.items.all())
 
 
 class SaleItem(models.Model):

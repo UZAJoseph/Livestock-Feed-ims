@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <!-- Latest compiled and minified CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    
+</head>
+<body>
+    <div class="row">
+        
+{% block content %}
+<form method="post">
+  {% csrf_token %}
+  <p>You are about to confirm the following order(s):</p>
+  <ul>
+    {% for order in orders %}
+      <li>{{ order }}</li>
+    {% endfor %}
+  </ul>
+
+  {{ form.as_p }}
+
+  {% for order in orders %}
+    <input type="hidden" name="{{ action_checkbox_name }}" value="{{ order.pk }}">
+  {% endfor %}
+  <input type="hidden" name="action" value="confirm_orders">
+  <input type="submit" name="apply" value="Confirm">
+</form>
+{% endblock %}
+    </div>
+</body>
+</html>
