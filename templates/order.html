@@ -1,0 +1,205 @@
+<div class="modal" id="orderNow">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h4 class="modal-title">Order Page</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- Modal body -->
+            <div class="modal-body">
+                {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+                {% endif %}
+
+                <form method="post" action="{% url 'order_form' %}">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label">Animal</label>
+                        <select id="id_animal" class="form-select" required>
+                            <option value="">-- Select an animal --</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Feed Type</label>
+                        <select id="id_feed_type" class="form-select" required disabled>
+                            <option value="">-- Select feed type --</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Package</label>
+                        <select name="product" id="id_product" class="form-select" required disabled>
+                            <option value="">-- Select a package --</option>
+                        </select>
+                    </div>
+
+                    <!-- source data for the cascade, hidden from the user -->
+                    <select id="products-data" style="display:none">
+                        {% for product in products %}
+                        <option value="{{ product.id }}" data-animal-id="{{ product.feed_type.animal.id }}"
+                            data-animal-name="{{ product.feed_type.animal.name }}"
+                            data-feedtype-id="{{ product.feed_type.id }}"
+                            data-feedtype-name="{{ product.feed_type.name }}" data-price="{{ product.default_price }}"
+                            data-label="{{ product.amount }}{{ product.measure.abbreviation }} - {{ product.default_price }} RWF">
+                        </option>
+                        {% endfor %}
+                    </select>
+
+                    <div class="mb-3">
+                        <label class="form-label">Unit Price Per kg</label>
+                        <input type="text" id="id_unit_price" class="form-control" readonly>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Total Price</label>
+                        <input type="text" id="id_total_price" class="form-control" readonly>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Quantity</label>
+                        <input type="number" step="0.01" min="0.01" name="quantity" id="id_quantity"
+                            class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" name="full_name" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Telephone</label>
+                        <input type="text" name="telephone" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">District</label>
+                        <input type="text" name="district" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Sector</label>
+                        <input type="text" name="sector" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Cell</label>
+                        <input type="text" name="cell" class="form-control" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-success">Order Now</button>
+                </form>
+            </div>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const dataSelect = document.getElementById('products-data');
+                    const productOptions = Array.from(dataSelect.options);
+
+                    const animalSelect = document.getElementById('id_animal');
+                    const feedTypeSelect = document.getElementById('id_feed_type');
+                    const productSelect = document.getElementById('id_product');
+                    const quantityInput = document.getElementById('id_quantity');
+                    const unitPriceField = document.getElementById('id_unit_price');
+                    const totalPriceField = document.getElementById('id_total_price');
+
+                    // Build unique animal list
+                    const animals = [];
+                    productOptions.forEach(opt => {
+                        const id = opt.dataset.animalId;
+                        const name = opt.dataset.animalName;
+                        if (!animals.some(a => a.id === id)) {
+                            animals.push({ id, name });
+                        }
+                    });
+                    animals.forEach(animal => {
+                        const option = document.createElement('option');
+                        option.value = animal.id;
+                        option.textContent = animal.name;
+                        animalSelect.appendChild(option);
+                    });
+
+                    animalSelect.addEventListener('change', function () {
+                        const animalId = this.value;
+                        feedTypeSelect.innerHTML = '<option value="">-- Select feed type --</option>';
+                        productSelect.innerHTML = '<option value="">-- Select a package --</option>';
+                        unitPriceField.value = '';
+                        totalPriceField.value = '';
+                        productSelect.disabled = true;
+
+                        if (!animalId) {
+                            feedTypeSelect.disabled = true;
+                            return;
+                        }
+
+                        const feedTypes = [];
+                        productOptions.forEach(opt => {
+                            if (opt.dataset.animalId === animalId) {
+                                const id = opt.dataset.feedtypeId;
+                                const name = opt.dataset.feedtypeName;
+                                if (!feedTypes.some(f => f.id === id)) {
+                                    feedTypes.push({ id, name });
+                                }
+                            }
+                        });
+                        feedTypes.forEach(feedType => {
+                            const option = document.createElement('option');
+                            option.value = feedType.id;
+                            option.textContent = feedType.name;
+                            feedTypeSelect.appendChild(option);
+                        });
+
+                        feedTypeSelect.disabled = false;
+                    });
+
+                    feedTypeSelect.addEventListener('change', function () {
+                        const feedTypeId = this.value;
+                        productSelect.innerHTML = '<option value="">-- Select a package --</option>';
+                        unitPriceField.value = '';
+                        totalPriceField.value = '';
+
+                        if (!feedTypeId) {
+                            productSelect.disabled = true;
+                            return;
+                        }
+
+                        productOptions.forEach(opt => {
+                            if (opt.dataset.feedtypeId === feedTypeId) {
+                                const option = document.createElement('option');
+                                option.value = opt.value;
+                                option.textContent = opt.dataset.label;
+                                option.setAttribute('data-price', opt.dataset.price);
+                                productSelect.appendChild(option);
+                            }
+                        });
+
+                        productSelect.disabled = false;
+                    });
+
+                    function updatePrices() {
+                        const selectedOption = productSelect.options[productSelect.selectedIndex];
+                        const price = parseFloat(selectedOption ? selectedOption.getAttribute('data-price') : 0) || 0;
+                        const qty = parseFloat(quantityInput.value) || 0;
+
+                        unitPriceField.value = price.toFixed(2);
+                        totalPriceField.value = (price * qty).toFixed(2);
+                    }
+
+                    productSelect.addEventListener('change', updatePrices);
+                    quantityInput.addEventListener('input', updatePrices);
+                });
+            </script>
+
+            <!-- Modal footer -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+            </div>
+
+        </div>
+    </div>
+</div>

@@ -1,0 +1,56 @@
+<!-- Modal body -->
+
+
+<!-- The Modal -->
+<div class="modal" id="animalfeed">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h4 class="modal-title text-center">Animal Feed</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-striped table-hover">
+                    <thead class="table-info">
+                        <tr>
+                            <th>Animal</th>
+                            <th>Type 1</th>
+                            <th>Type 2</th>
+                            <th>Type 3</th>
+                            <th>Type 4</th>
+                            <th>Type 5</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for animal in animals %}
+                        <tr>
+                            <td>{{ animal.name }}</td>
+                            {% with feeds=animal.feed_types.all %}
+                            <td>{% for feed in feeds|slice:"0:1" %}{{ feed.name }}{% endfor %}</td>
+                            <td>{% for feed in feeds|slice:"1:2" %}{{ feed.name }}{% endfor %}</td>
+                            <td>{% for feed in feeds|slice:"2:3" %}{{ feed.name }}{% endfor %}</td>
+                            <td>{% for feed in feeds|slice:"3:4" %}{{ feed.name }}{% endfor %}</td>
+                            <td>{% for feed in feeds|slice:"4:5" %}{{ feed.name }}{% endfor %}</td>
+                            {% endwith %}
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6">No animal types added yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Modal footer -->
+            <div class="modal-footer">
+                <a href="">View the Stock</a>
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+            </div>
+
+        </div>
+    </div>
+</div>

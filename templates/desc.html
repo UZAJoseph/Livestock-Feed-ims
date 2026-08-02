@@ -1,0 +1,105 @@
+
+<!-- Modal -->
+                    <div class="modal fade" id="description" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Select Animal & Feed Type</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+
+                                    <!-- Step 1: Animal select -->
+                                    <div class="mb-3">
+                                        <label for="animalSelect" class="form-label">Select Animal</label>
+                                        <select id="animalSelect" class="form-select">
+                                            <option value="">-- Choose an animal --</option>
+                                            {% for animal in animals %}
+                                            <option value="{{ animal.id }}">{{ animal.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                    <!-- Step 2: Feed types (populated via JS) -->
+                                    <div class="mb-3" id="feedTypesWrapper" style="display:none;">
+                                        <label class="form-label">Feed Types</label>
+                                        <div id="feedTypesList" class="list-group"></div>
+                                    </div>
+
+                                    <!-- Step 3: Description -->
+                                    <div class="mb-3" id="descriptionWrapper" style="display:none;">
+                                        <label class="form-label">Description</label>
+                                        <p id="feedDescriptionText" class="border rounded p-2 bg-light"></p>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            const animalSelect = document.getElementById('animalSelect');
+                            const feedTypesWrapper = document.getElementById('feedTypesWrapper');
+                            const feedTypesList = document.getElementById('feedTypesList');
+                            const descriptionWrapper = document.getElementById('descriptionWrapper');
+                            const feedDescriptionText = document.getElementById('feedDescriptionText');
+
+                            // Reset modal state each time it's reopened
+                            document.getElementById('description').addEventListener('show.bs.modal', function () {
+                                animalSelect.value = '';
+                                feedTypesWrapper.style.display = 'none';
+                                descriptionWrapper.style.display = 'none';
+                                feedTypesList.innerHTML = '';
+                                feedDescriptionText.textContent = '';
+                            });
+
+                            // Step 1 -> Step 2: when animal changes, fetch its feed types
+                            animalSelect.addEventListener('change', function () {
+                                const animalId = this.value;
+                                descriptionWrapper.style.display = 'none';
+
+                                if (!animalId) {
+                                    feedTypesWrapper.style.display = 'none';
+                                    return;
+                                }
+
+                                fetch(`/feeds/animal/${animalId}/feed-types/`)
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        feedTypesList.innerHTML = '';
+
+                                        if (data.feed_types.length === 0) {
+                                            feedTypesList.innerHTML = '<p class="text-muted mb-0">No feed types for this animal.</p>';
+                                        } else {
+                                            data.feed_types.forEach(ft => {
+                                                const btn = document.createElement('button');
+                                                btn.type = 'button';
+                                                btn.className = 'list-group-item list-group-item-action';
+                                                btn.textContent = ft.name;
+                                                btn.dataset.feedtypeId = ft.id;
+                                                btn.addEventListener('click', () => loadDescription(ft.id, btn));
+                                                feedTypesList.appendChild(btn);
+                                            });
+                                        }
+
+                                        feedTypesWrapper.style.display = 'block';
+                                    })
+                                    .catch(err => console.error('Error fetching feed types:', err));
+                            });
+
+                            // Step 2 -> Step 3: when a feed type is clicked, fetch its description
+                            function loadDescription(feedtypeId, clickedBtn) {
+                                // highlight active selection
+                                feedTypesList.querySelectorAll('.list-group-item').forEach(el => el.classList.remove('active'));
+                                clickedBtn.classList.add('active');
+
+                                fetch(`/feeds/feed-type/${feedtypeId}/description/`)
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        feedDescriptionText.textContent = data.description;
+                                        descriptionWrapper.style.display = 'block';
+                                    })
+                                    .catch(err => console.error('Error fetching description:', err));
+                            }
+                        });
+                    </script>

@@ -10,8 +10,18 @@ from .models import Order, Sale, SaleItem, Product, Animal, FeedType
 
 
 
+def study(request):
+    return render (request, 'h2.html')
+
 def index(request):
-    return render (request, 'base.html')
+    animals = Animal.objects.all().order_by('name')
+    products = Product.objects.select_related('feed_type', 'feed_type__animal', 'store').filter(quantity__gt=0)
+    return render(request, 'base.html', {'animals': animals, 'products': products})
+
+# def index(request):
+
+#     animals = Animal.objects.prefetch_related('feed_types').all()
+#     return render (request, 'base.html', {'animals':animals})
 
 def _apply_common_filters(qs, request, animal_field, feedtype_field, date_field=None):
     animal_id = request.GET.get('animal')
@@ -191,7 +201,7 @@ def order_form(request):
 
 def animal_list(request):
     animals = Animal.objects.all().order_by('name')
-    return render(request, 'home.html', {'animals':animals})
+    return render(request, 'base.html', {'animals':animals})
 
 
 
