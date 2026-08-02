@@ -56,10 +56,7 @@
             background-color: rgb(65, 13, 100);
         }
 
-        /* .ohibu-nav {
-            border-bottom: none;
-            /* removes the default nav-tabs bottom border */
-        } */
+       
 
        
 
@@ -190,6 +187,7 @@
                 {% for animal in animals %}
                 <div class="col-md-3">
                     <div class="card" style="width:99%">
+                        <h4 class="card-title text-center bg-info1">{{ animal.name }}</h4>
                         {% if animal.image %}
                         <img class="card-img-top" src="{{ animal.image.url }}" alt="{{ animal.name }}"
                             style="width:100%">
@@ -198,14 +196,15 @@
                             style="width:100%">
                         {% endif %}
                         <div class="card-body">
-                            <h4 class="card-title">{{ animal.name }}</h4>
-                            <p class="card-text">
-                                {% for feed in animal.feed_types.all %}
-                                {{ feed.name }}{% if not forloop.last %}, {% endif %}
-                                {% empty %}
-                                No feed types listed.
-                                {% endfor %}
-                            </p>
+                            <h6 class="card-title">{{ animal.name }} Available Type</h6>
+                            <hr>
+                            <ul class="card-text list-unstyled">
+                    {% for feed in animal.feed_types.all %}
+                    <li>{{ feed.name }}</li>
+                    {% empty %}
+                    <li>No feed types listed.</li>
+                    {% endfor %}
+                </ul>
                             <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#orderNow">Order
                                 Now</a>
                         </div>

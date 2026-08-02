@@ -5,11 +5,64 @@
 {% block title %}OHIBU - Confirm{% endblock %}
 
 {% block extra_css %}
+<style>
+    .glass-modal .modal-content {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        border-radius: 12px;
+    }
+
+    .glass-modal .modal-header,
+    .glass-modal .modal-footer {
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .glass-modal .form-control,
+    .glass-modal .form-select {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+    }
+
+    .glass-modal .form-select option,
+.glass-modal .form-control option {
+    background-color: #2c3e50;
+    color: white;
+}
+
+    .glass-modal .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .glass-modal .form-control:focus,
+    .glass-modal .form-select:focus {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.5);
+        color: white;
+        box-shadow: none;
+    }
+
+    .glass-modal .form-label,
+    .glass-modal .form-check-label {
+        color: white;
+    }
+
+    .glass-modal .btn-close {
+        filter: invert(1);
+    }
+
+    .modal-backdrop.show {
+        opacity: 0.6;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
 
-<div class="modal" id="confirmOrderModal" tabindex="-1" aria-hidden="true">
+<div class="modal glass-modal" id="confirmOrderModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
