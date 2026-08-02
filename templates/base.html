@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <!-- Latest compiled and minified CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        #bgimage {
+    position: relative;
+    background-image: url("Images/ai1.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    height: 100vh;
+}
+
+        #bgimage::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            /* 50% transparent black */
+        }
+
+        #content1 {
+            position: relative;
+            z-index: 1;
+            color: white;
+        }
+
+        .glass-card {
+            background: rgba(221, 206, 206, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(232, 187, 187, 0.3);
+        }
+
+        .smmallFont {
+            font-size: 70%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div class="row " id="bgimage">
+            <div class="col-12">
+<div class="row bg-secondary fixed-top" id="content1">
+                <div class="col-md-1"></div>
+                <div class="col-md-2 d-flex gap-2">
+                    <img src="Images/logo.png" class="img-thumbnail" alt="OHIBU Logo" width="20%" height="20%">
+                    <h6 class="smmallFont text-center pt-3">Over Hills Business Unit</h6>
+                </div>
+                
+                <div class="col-md-2"></div>
+                <div class="col-md-6">
+                    <div class="d-flex gap-4">
+                        <a href="#">Home</a>
+                        
+                        <a href="#service">Services</a>
+                        <a href="#">Contact</a>
+                        <a href="#">About Us</a>
+                        <a href="#">Order Now</a>
+                        <a href="#" class="btn btn-primary">Staff Login</a>
+                    </div>
+                </div>
+                <div class="col-md-1"></div>
+
+            </div>
+           
+            <div class="row pt-5"></div>
+
+            <div class="row text-white mt-5">
+                <div class="col-md-3"></div>
+                <div class="col-md-4"></div>
+                <div class="col-md-3">
+                    <div class="card glass-card">
+                        <div class="card-header text-center">OHIBU</div>
+                        <div class="card-body text-center">Premium Animal Feed for Healthier Livestock.
+                            Experience outstanding customer service and fast, reliable delivery to keep your farm
+                            running smoothly.</div>
+                        <div class="card-footer text-center">
+                            <h6 class="footMessage">Best animal feed, quick services, quick delivery</h6>
+                            <a href="#" class="btn btn-primary">Order Now</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2"></div>
+            </div>
+             </div>
+
+        </div>
+        <div class="row pt-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    hello 
+                </div>
+            </div>
+        </div>
+
+        <!-- SERVICES THAT WE OFFER -->
+         <section id="service">
+
+         
+        <div class="row pt-3">
+            <div class="col-md-1"></div>
+            <div class="col-md-3">
+                <p>xxxxxxxxxxxxxx</p>
+                <div class="card" style="width:99%">
+                    <img class="card-img-top" src="Images/soft1.png" alt="Card image" style="width:100%">
+                    <div class="card-body">
+                        <h4 class="card-title">John Doe</h4>
+                        <p class="card-text">Some example text some example text. John Doe is an architect and engineer
+                        </p>
+                        <a href="#" class="btn btn-primary">Order Now</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <p>xxxxxxxxxxxxxx</p>
+                <div class="card" style="width:99%">
+                    <img class="card-img-top" src="Images/soft1.png" alt="Card image" style="width:100%">
+                    <div class="card-body">
+                        <h4 class="card-title">John Doe</h4>
+                        <p class="card-text">Some example text some example text. John Doe is an architect and engineer
+                        </p>
+                        <a href="#" class="btn btn-primary">Order Now</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <p>xxxxxxxxxxxxxx</p>
+                <div class="card" style="width:99%">
+                    <img class="card-img-top" src="Images/soft1.png" alt="Card image" style="width:100%">
+                    <div class="card-body">
+                        <h4 class="card-title">John Doe</h4>
+                        <p class="card-text">Some example text some example text. John Doe is an architect and engineer
+                        </p>
+                        <a href="#" class="btn btn-primary">Order Now</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-1"></div>
+        </div>
+
+        <div class="row pt-3">
+            <div class="col-md-1"></div>
+            <div class="col-md-3">
+                <p>xxxxxxxxxxxxxx</p>
+                <div class="card" style="width:99%">
+                    <img class="card-img-top" src="Images/soft1.png" alt="Card image" style="width:100%">
+                    <div class="card-body">
+                        <h4 class="card-title">John Doe</h4>
+                        <p class="card-text">Some example text some example text. John Doe is an architect and engineer
+                        </p>
+                        <a href="#" class="btn btn-primary">Order Now</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <p>xxxxxxxxxxxxxx</p>
+                <div class="card" style="width:99%">
+                    <img class="card-img-top" src="Images/soft1.png" alt="Card image" style="width:100%">
+                    <div class="card-body">
+                        <h4 class="card-title">John Doe</h4>
+                        <p class="card-text">Some example text some example text. John Doe is an architect and engineer
+                        </p>
+                        <a href="#" class="btn btn-primary">Order Now</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <p>xxxxxxxxxxxxxx</p>
+                <div class="card" style="width:99%">
+                    <img class="card-img-top" src="Images/soft1.png" alt="Card image" style="width:100%">
+                    <div class="card-body">
+                        <h4 class="card-title">John Doe</h4>
+                        <p class="card-text">Some example text some example text. John Doe is an architect and engineer
+                        </p>
+                        <a href="#" class="btn btn-primary">Order Now</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-1"></div>
+        </div>
+        </section>
+
+        
+
+        <div class="row pt-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    About OHIBU 
+                </div>
+            </div>
+        </div>
+        <section id="footer">
+<div class="row">
+    <div class="col-sm-1"></div>
+    <div class="col-md-4">
+        <h5>OHIBU</h5>
+        <p>
+            OHIBU is an Over Hills Business Unit which aims to xxxxxxxxxxxxxxx
+            xxxxxxxxxxxxxxxxxxxxxxxxxxx
+            xxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxx xxxxxxxx
+        </p>
+    </div>
+    <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>Tel: 0787xxxx</p>
+        <p>Email:</p>
+    </div>
+    <div class="col-md-3">
+        <h5>Address</h5>
+        <p>District: xxxxxx</p>
+        <p>Sector: xxxxxx</p>
+    </div>
+    <div class="col-sm-1"></div>
+</div>
+
+        </section>
+    </div>
+</body>
+
+</html>
