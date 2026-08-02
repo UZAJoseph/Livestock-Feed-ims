@@ -43,6 +43,7 @@ class Store(models.Model):
 class Animal(models.Model):
     """e.g. Cow, Dog, Chicken, Pig..."""
     name = models.CharField(max_length=100, unique=True)
+    image = models.ImageField(upload_to='Images/', blank=True, null=True)
 
     def __str__(self):
         return self.name

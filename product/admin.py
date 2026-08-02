@@ -2,11 +2,13 @@ from django.contrib import admin, messages
 from django.utils import timezone
 from django.shortcuts import render
 from django import forms
+from django.utils.html import format_html
 from django.core.exceptions import ValidationError
 from .models import District, Sector, Store, Store, FeedType, Animal, Measure, Product, Order, Sale, SaleItem, PaymentMethod, PaymentStatus
 
 
 # Register your models here.
+
 
 class SaleItemInline(admin.TabularInline):
     model = SaleItem
@@ -167,9 +169,15 @@ class FeedTypeInline(admin.TabularInline):
 
 @admin.register(Animal)
 class AnimalAdmin(admin.ModelAdmin):
-    list_display = ('name',)
+    list_display = ('name', 'image_preview')
     search_fields = ('name',)
     inlines = [FeedTypeInline]
+
+    def image_preview(self, obj):
+        if obj.image:
+            return format_html('<img src="{}" style="height:50px;" />', obj.image.url)
+        return '-'
+    image_preview.short_description = 'Preview'
 
 
 @admin.register(FeedType)

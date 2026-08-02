@@ -10,6 +10,8 @@ from .models import Order, Sale, SaleItem, Product, Animal, FeedType
 
 
 
+def index(request):
+    return render (request, 'base.html')
 
 def _apply_common_filters(qs, request, animal_field, feedtype_field, date_field=None):
     animal_id = request.GET.get('animal')
