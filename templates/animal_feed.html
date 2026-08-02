@@ -1,8 +1,5 @@
-<!-- Modal body -->
-
-
 <!-- The Modal -->
-<div class="modal" id="animalfeed">
+<div class="modal glass-modal" id="animalfeed">
     <div class="modal-dialog">
         <div class="modal-content">
 
@@ -44,6 +41,56 @@
                     </tbody>
                 </table>
             </div>
+
+            <style>
+                .glass-modal .modal-content {
+                    background: rgba(255, 255, 255, 0.15);
+                    backdrop-filter: blur(12px);
+                    -webkit-backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    color: white;
+                    border-radius: 12px;
+                }
+
+                .glass-modal .modal-header,
+                .glass-modal .modal-footer {
+                    border-color: rgba(255, 255, 255, 0.2);
+                }
+
+                .glass-modal .btn-close {
+                    filter: invert(1);
+                }
+
+                .glass-modal .table {
+                    color: white;
+                    background: transparent;
+                }
+
+                .glass-modal .table > :not(caption) > * > * {
+                    background: transparent;
+                    color: white;
+                    border-color: rgba(255, 255, 255, 0.2);
+                }
+
+                .glass-modal .table-info {
+                    background: rgba(255, 255, 255, 0.15) !important;
+                }
+
+                .glass-modal .table-striped > tbody > tr:nth-of-type(odd) > * {
+                    background: rgba(255, 255, 255, 0.08);
+                    color: white;
+                }
+
+                .glass-modal .table-hover > tbody > tr:hover > * {
+                    background: rgba(255, 255, 255, 0.2);
+                    color: white;
+                }
+
+                .glass-modal .modal-footer a {
+                    color: white;
+                    text-decoration: underline;
+                }
+            </style>
 
             <!-- Modal footer -->
             <div class="modal-footer">

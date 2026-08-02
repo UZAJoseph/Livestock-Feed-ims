@@ -1,4 +1,4 @@
-<div class="modal" id="orderNow">
+<div class="modal glass-modal" id="orderNow">
     <div class="modal-dialog">
         <div class="modal-content">
             <!-- Modal Header -->
@@ -95,6 +95,75 @@
                     <button type="submit" class="btn btn-success">Order Now</button>
                 </form>
             </div>
+
+            <style>
+                .glass-modal .modal-content {
+                    background: rgba(255, 255, 255, 0.15);
+                    backdrop-filter: blur(12px);
+                    -webkit-backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    color: white;
+                    border-radius: 12px;
+                }
+
+                .glass-modal .modal-header,
+                .glass-modal .modal-footer {
+                    border-color: rgba(255, 255, 255, 0.2);
+                }
+
+                .glass-modal .form-control,
+                .glass-modal .form-select {
+                    background: rgba(255, 255, 255, 0.1);
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    color: white;
+                }
+
+                .glass-modal .form-select option {
+                    background-color: #2c3e50;
+                    color: white;
+                }
+
+                .glass-modal .form-control::placeholder {
+                    color: rgba(255, 255, 255, 0.6);
+                }
+
+                .glass-modal .form-control:focus,
+                .glass-modal .form-select:focus {
+                    background: rgba(255, 255, 255, 0.15);
+                    border-color: rgba(255, 255, 255, 0.5);
+                    color: white;
+                    box-shadow: none;
+                }
+
+                .glass-modal .form-control[readonly] {
+                    background: rgba(255, 255, 255, 0.08);
+                    color: rgba(255, 255, 255, 0.85);
+                }
+
+                .glass-modal .form-control:disabled,
+                .glass-modal .form-select:disabled {
+                    background: rgba(255, 255, 255, 0.05);
+                    color: rgba(255, 255, 255, 0.5);
+                }
+
+                .glass-modal .form-label {
+                    color: white;
+                }
+
+                .glass-modal .btn-close {
+                    filter: invert(1);
+                }
+
+                .glass-modal .alert {
+                    background: rgba(255, 255, 255, 0.15);
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    color: white;
+                }
+
+                .modal-backdrop.show {
+                    opacity: 0.6;
+                }
+            </style>
 
             <script>
                 document.addEventListener('DOMContentLoaded', function () {
