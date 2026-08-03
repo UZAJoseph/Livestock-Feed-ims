@@ -4,3 +4,12 @@
 4. In payment add (prepaid/paid/unpaid : method (cash, telephone))
 5. Ask (give descriiption to client) -OKAY
 6. services: animal feed, animal sell, training. - OKAY
+
+
+meeting on 3 Agust 2026
+
+1. Client Review (can see and provide some comments)
+2. background image.
+3. on orderform combine some field
+4. Add customer name to sales
+5. pre-order, specify when
