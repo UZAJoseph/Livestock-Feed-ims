@@ -19,7 +19,7 @@
         }
 
         .mixcolor2 {
-            background: linear-gradient(160deg, #b383bf 10%, #a5acb0 20%, #8dbbd1 50%, #915799 90%);
+            background: linear-gradient(160deg, #e4dce7 10%, #a5acb0 20%, #8dbbd1 50%, #915799 90%);
             min-height: 9%;
             min-width: 9%;
             padding: 10px 10px;
@@ -107,6 +107,53 @@
             color: #000;
             background-color: rgb(182, 210, 114);
         }
+
+        .glass-card {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 15px;
+
+    color: white;
+
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+
+    overflow: hidden;
+}
+
+.glass-card .card-header,
+.glass-card .card-body,
+.glass-card .card-footer {
+    background: transparent;
+    color: white;
+}
+
+.glass-card .card-title,
+.glass-card .card-text,
+.glass-card li,
+.glass-card h6 {
+    color: white;
+}
+
+.glass-card hr {
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.glass-card .btn-primary {
+    background: rgba(13, 110, 253, 0.7);
+    border: none;
+}
+
+.glass-card .btn-primary:hover {
+    background: rgba(13, 110, 253, 0.9);
+}
+
+.glass-card .card-img-top {
+    opacity: 0.9;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -123,7 +170,7 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="collapsibleNavbar">
-                    <ul class="nav ohibu-nav nav-tabs">
+                    <ul class="nav ohibu-nav nav-tabs ms-auto me-5">
                         <li class="nav-item">
                                 <a class="nav-link active" href="#">Home</a>
                             </li>
@@ -205,8 +252,8 @@
 
                 {% for animal in animals %}
                 <div class="col-md-3">
-                    <div class="card" style="width:99%">
-                        <h4 class="card-title text-center bg-info1">{{ animal.name }}</h4>
+                    <div class="card glass-card m-2" style="width:99%">
+                        <h4 class="card-title text-center py-2 text-dark">{{ animal.name }}</h4>
                         {% if animal.image %}
                         <img class="card-img-top" src="{{ animal.image.url }}" alt="{{ animal.name }}"
                             style="width:100%">
