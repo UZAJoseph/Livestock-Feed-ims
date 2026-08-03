@@ -9,6 +9,24 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <style>
+        .mixcolor {
+            background: linear-gradient(90deg, #b383bf 20%, #95a9b6 40%, #490c43 90%);
+            min-height: 9%;
+            min-width: 9%;
+            padding: 10px 10px;
+
+
+        }
+
+        .mixcolor2 {
+            background: linear-gradient(160deg, #b383bf 10%, #a5acb0 20%, #8dbbd1 50%, #915799 90%);
+            min-height: 9%;
+            min-width: 9%;
+            padding: 10px 10px;
+
+
+        }
+
         #bgimage {
             position: relative;
             background-image: url("{% static 'Images/soft2.png' %}");
@@ -45,20 +63,23 @@
         }
 
         .bg-info1 {
-            background-color: rgb(200, 198, 201);
+             background: linear-gradient(180deg, #dbd9e2 30%,  #8dbbd1 60%, #6f646f 99%);
+            min-height: 9%;
+            min-width: 9%;
+            padding: 10px 10px;
         }
 
-        .bg-secondary1 {
+        /* .bg-secondary1 {
             background-color: rgb(167, 149, 167);
-        }
+        } */
 
         #cardInfo {
             background-color: rgb(65, 13, 100);
         }
 
-       
 
-       
+
+
 
         .ohibu-nav .nav-link {
             color: white;
@@ -81,7 +102,7 @@
             border: none;
         }
 
-        a:hover{
+        a:hover {
             font-size: large;
             color: #000;
             background-color: rgb(182, 210, 114);
@@ -92,23 +113,18 @@
 
 <body>
     <div class="container-fluid">
-        <div class="row " id="bgimage">
-            <div class="col-12">
-
-                <div class="row bg-secondary1 " id="content1">
-                    <div class="col-md-1"></div>
-                    <div class="col-md-2 d-flex gap-2">
-                        <img src="{% static 'Images/logo1.png' %}" class="img-thumbnail" alt="OHIBU Logo" width="20%"
-                            height="20%">
-                        <h6 class="smmallFont text-center pt-3">Over Hills Business Unit</h6>
-                    </div>
-
-                    <div class="col-md-1">
-
-                    </div>
-                    <div class="col-md-7">
-                        <ul class="nav ohibu-nav nav-tabs">
-                            <li class="nav-item">
+        <!-- big -->
+        <nav class="navbar navbar-expand-sm mixcolor navbar-dark sticky-top">
+            <div class="container-fluid">
+                <img src="{% static 'Images/logo1.png' %}" class="img-thumbnail" alt="OHIBU Logo" width="40"  height="40" >
+                        <h6 class="smmallFont text-center p-2 text-white">Over Hills Business Unit</h6>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapsibleNavbar">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="collapsibleNavbar">
+                    <ul class="nav ohibu-nav nav-tabs">
+                        <li class="nav-item">
                                 <a class="nav-link active" href="#">Home</a>
                             </li>
                             <li class="nav-item">
@@ -129,56 +145,59 @@
                                 <a class="nav-link" href="#aboutUs">About Us</a>
                             </li>
                             <li class="nav-item">
-                                <a href="http://127.0.0.1:8000/admin" class="btn btn-primary">Staff Login</a>
+                                <a href="http://127.0.0.1:8000/admin" class="btn btn-primary">Login</a>
                             </li>
-                        </ul>
-                    </div>
-
-                    <div class="col-md-1"></div>
-
-                </div>
-
-                <div class="row pt-5">
-                    <div class="col-12">
-                        {% block content %}
-
-                        {% endblock %}
-                    </div>
-
-                </div>
-
-                <div class="row text-white mt-5">
-                    <div class="col-md-3"></div>
-                    <div class="col-md-4"></div>
-                    <div class="col-md-3">
-                        <div class="card glass-card">
-                            <div class="card-header text-center"> <b>OHIBU</b></div>
-                            <div class="card-body text-center text-white">Premium Animal Feed for Healthier Livestock.
-                                Experience outstanding customer service and fast, reliable delivery to keep your farm
-                                running smoothly.</div>
-                            <div class="card-footer text-center">
-                                <h6 class="footMessage ">Best animal feed, quick services, quick delivery</h6>
-                                <a href="#" class="btn btn-primary" type="button" data-bs-toggle="modal"
-                                    data-bs-target="#orderNow">Order Now</a>
-                                <a href="#" data-bs-toggle="modal" data-bs-target="#description" style="color: azure; text-decoration: none;">More Info.</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-2"></div>
+                    </ul>
                 </div>
             </div>
+        </nav>
+
+        <!-- end  -->
+        <div class="row " id="bgimage">
+           
+
+            <div class="row pt-5">
+                <div class="col-12">
+                    {% block content %}
+
+                    {% endblock %}
+                </div>
+
+            </div>
+
+            <div class="row text-white mt-5">
+                <div class="col-md-3"></div>
+                <div class="col-md-4"></div>
+                <div class="col-md-3">
+                    <div class="card glass-card">
+                        <div class="card-header text-center"> <b>OHIBU</b></div>
+                        <div class="card-body text-center text-white">Premium Animal Feed for Healthier Livestock.
+                            Experience outstanding customer service and fast, reliable delivery to keep your farm
+                            running smoothly.</div>
+                        <div class="card-footer text-center">
+                            <h6 class="footMessage ">Best animal feed, quick services, quick delivery</h6>
+                            <a href="#" class="btn btn-primary" type="button" data-bs-toggle="modal"
+                                data-bs-target="#orderNow">Order Now</a>
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#description"
+                                style="color: azure; text-decoration: none;">More Info.</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2"></div>
+            </div>
+
 
         </div>
-        <div class="row pt-3">
-            <div class="card">
-                <div class="card-body text-center">
+        <div class="row pt-2">
+            <div class="card mixcolor">
+                <div class="card-body text-center ">
                     <h4>Available Animals In our Store</h4>
                 </div>
             </div>
         </div>
 
         <!-- SERVICES THAT WE OFFER -->
-        <section id="service">
+        <section id="service" class="mixcolor2">
 
 
             <div class="row pt-3">
@@ -199,12 +218,12 @@
                             <h6 class="card-title">{{ animal.name }} Available Type</h6>
                             <hr>
                             <ul class="card-text list-unstyled">
-                    {% for feed in animal.feed_types.all %}
-                    <li>{{ feed.name }}</li>
-                    {% empty %}
-                    <li>No feed types listed.</li>
-                    {% endfor %}
-                </ul>
+                                {% for feed in animal.feed_types.all %}
+                                <li>{{ feed.name }}</li>
+                                {% empty %}
+                                <li>No feed types listed.</li>
+                                {% endfor %}
+                            </ul>
                             <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#orderNow">Order
                                 Now</a>
                         </div>
@@ -221,7 +240,7 @@
 
 
         <div class="row pt-3">
-            <div class=" text-white" id="cardInfo">
+            <div class=" text-white mixcolor">
                 <div class="card-body text-center text-white">
                     About OHIBU
                 </div>
