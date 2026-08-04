@@ -288,6 +288,45 @@
             height: 100% !important;
         }
 
+        .model-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            height: 100%;
+            align-content: start;
+            overflow-y: auto;
+            padding-right: 2px;
+        }
+
+        .model-tile {
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.035);
+            border: 1px solid var(--glass-border);
+            padding: 16px 16px 14px;
+            transition: background 0.15s ease, transform 0.15s ease;
+        }
+
+        .model-tile:hover {
+            background: var(--glass-fill-hover);
+            transform: translateY(-2px);
+        }
+
+        .model-tile .model-name {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .model-tile .model-count {
+            font-family: 'Sora', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        @media (max-width: 700px) {
+            .model-grid { grid-template-columns: 1fr 1fr; }
+        }
+
         @media (max-width: 980px) {
             .shell { grid-template-columns: 1fr; }
             .sidebar { position: static; }
@@ -315,6 +354,7 @@
             <button class="nav-item" data-target="products"><span class="dot"></span>Top Products</button>
             <button class="nav-item" data-target="status"><span class="dot"></span>Orders by Status</button>
             <button class="nav-item" data-target="customers"><span class="dot"></span>Top Customers</button>
+            <button class="nav-item" data-target="models"><span class="dot"></span>Model Summary</button>
             <div class="foot-note">Select an item to focus its chart. Overview shows everything at a glance.</div>
         </nav>
 
@@ -371,6 +411,9 @@
                     <div class="chart-slot" id="slot-products"><canvas id="topProductsChart"></canvas></div>
                     <div class="chart-slot" id="slot-status"><canvas id="statusChart"></canvas></div>
                     <div class="chart-slot" id="slot-customers"><canvas id="customerChart"></canvas></div>
+                    <div class="chart-slot" id="slot-models">
+                        <div class="model-grid" id="modelGrid"></div>
+                    </div>
                 </div>
             </div>
 
@@ -501,6 +544,24 @@
             document.getElementById('statCustomers').textContent = (data.labels || []).length;
         });
 
+        // ---------- model summary (counts per model) ----------
+        fetch("{% url 'model_summary_data' %}").then(r => r.json()).then(data => {
+            const grid = document.getElementById('modelGrid');
+            grid.innerHTML = '';
+            (data.labels || []).forEach((label, i) => {
+                const tile = document.createElement('div');
+                tile.className = 'model-tile';
+                tile.innerHTML = `
+                    <div class="model-name">${label}</div>
+                    <div class="model-count">${fmtMoney(data.counts[i])}</div>
+                `;
+                grid.appendChild(tile);
+            });
+        }).catch(() => {
+            document.getElementById('modelGrid').innerHTML =
+                '<div class="model-tile"><div class="model-name">Model summary endpoint not found</div></div>';
+        });
+
         // ---------- left-nav switching ----------
         const titles = {
             overview: ['Overview', 'All charts'],
@@ -508,6 +569,7 @@
             products: ['Top Products', 'Ranked by revenue'],
             status: ['Orders by Status', 'Share of all orders'],
             customers: ['Top Customers', 'Ranked by revenue'],
+            models: ['Model Summary', 'Record counts across all models'],
         };
 
         document.querySelectorAll('.nav-item').forEach(btn => {

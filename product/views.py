@@ -8,16 +8,40 @@ from .models import Animal, Order, Product, FeedType
 from django.db.models import Sum, F, DecimalField, Count
 from django.db.models.functions import Coalesce, TruncDate
 from django.contrib.admin.views.decorators import staff_member_required
-from .models import Order, Sale, SaleItem, Product, Animal, FeedType, Review
+from .models import Order, Sale, SaleItem, Product, Animal, FeedType, Review, District, Sector, Measure, Store
 from .forms import RegisterForm, LoginForm,  ReviewForm
 
-
+from django.contrib.auth.models import User, Group
 
 from django.db.models import Sum, Count, F, DecimalField
 from django.db.models.functions import TruncDate, Coalesce
 from django.http import JsonResponse
 from django.shortcuts import render
 from .models import Order, Product
+
+
+
+def model_summary_data(request):
+    counts = {
+        "Users": User.objects.count(),
+        "Groups": Group.objects.count(),
+        "Animals": Animal.objects.count(),
+        "Districts": District.objects.count(),
+        "Sectors": Sector.objects.count(),
+        "Stores": Store.objects.count(),
+        "Feed Types": FeedType.objects.count(),
+        "Measures": Measure.objects.count(),
+        "Products": Product.objects.count(),
+        "Orders": Order.objects.count(),
+        "Sales": Sale.objects.count(),
+        "Reviews": Review.objects.count(),
+    }
+    return JsonResponse({
+        "labels": list(counts.keys()),
+        "counts": list(counts.values()),
+    })
+
+
 
 DECIMAL = DecimalField(max_digits=12, decimal_places=2)
 
