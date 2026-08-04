@@ -1,0 +1,27 @@
+
+<div class="modal glass-modal" id="reviewModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Leave a Review</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'review_create' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Feed Type</label>
+                        {{ review_form.feed_type }}
+                        {{ review_form.feed_type.errors }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Your Comment</label>
+                        {{ review_form.comment }}
+                        {{ review_form.comment.errors }}
+                    </div>
+                    <button type="submit" class="btn btn-success">Submit Review</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

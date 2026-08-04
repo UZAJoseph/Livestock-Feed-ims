@@ -8,8 +8,9 @@ from .models import Animal, Order, Product, FeedType
 from django.db.models import Sum, F, DecimalField
 from django.db.models.functions import Coalesce
 from django.contrib.admin.views.decorators import staff_member_required
-from .models import Order, Sale, SaleItem, Product, Animal, FeedType
-from .forms import RegisterForm, LoginForm
+from .models import Order, Sale, SaleItem, Product, Animal, FeedType, Review
+from .forms import RegisterForm, LoginForm,  ReviewForm
+
 
 
 
@@ -24,6 +25,8 @@ def _base_context(request, **extra):
         'products': Product.objects.select_related('feed_type', 'feed_type__animal', 'store').filter(quantity__gt=0),
         'register_form': RegisterForm(),
         'login_form': LoginForm(),
+        'review_form': ReviewForm(),
+        'reviews': Review.objects.select_related('user', 'feed_type').all()[:20],
         'profile': getattr(request.user, 'profile', None) if request.user.is_authenticated else None,
     }
     context.update(extra)
@@ -63,6 +66,18 @@ def login_view(request):
         else:
             messages.error(request, "Please fix the errors below.")
             return render(request, 'base.html', _base_context(request, login_form=form, open_modal='login'))
+    return redirect('index')
+
+@login_required(login_url='/')
+def review_create(request):
+    if request.method == 'POST':
+        form = ReviewForm(request.POST)
+        if form.is_valid():
+            form.save(user=request.user)
+            messages.success(request, "Thanks for your feedback!")
+        else:
+            messages.error(request, "Please fix the errors below.")
+            return render(request, 'base.html', _base_context(request, review_form=form, open_modal='review'))
     return redirect('index')
 
 

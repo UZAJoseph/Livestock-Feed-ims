@@ -1,7 +1,28 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
-from .models import UserProfile
+from .models import UserProfile, FeedType, Review
+
+
+
+
+
+class ReviewForm(forms.Form):
+    feed_type = forms.ModelChoiceField(
+        queryset=FeedType.objects.all(),
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    comment = forms.CharField(
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Share your experience...'})
+    )
+
+    def save(self, user):
+        return Review.objects.create(
+            user=user,
+            feed_type=self.cleaned_data['feed_type'],
+            comment=self.cleaned_data['comment'],
+        )
+
 
 
 class RegisterForm(forms.Form):
