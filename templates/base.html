@@ -63,7 +63,7 @@
         }
 
         .bg-info1 {
-             background: linear-gradient(180deg, #dbd9e2 30%,  #8dbbd1 60%, #6f646f 99%);
+            background: linear-gradient(180deg, #dbd9e2 30%, #8dbbd1 60%, #6f646f 99%);
             min-height: 9%;
             min-width: 9%;
             padding: 10px 10px;
@@ -109,51 +109,51 @@
         }
 
         .glass-card {
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
 
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 15px;
 
-    color: white;
+            color: white;
 
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
 
-    overflow: hidden;
-}
+            overflow: hidden;
+        }
 
-.glass-card .card-header,
-.glass-card .card-body,
-.glass-card .card-footer {
-    background: transparent;
-    color: white;
-}
+        .glass-card .card-header,
+        .glass-card .card-body,
+        .glass-card .card-footer {
+            background: transparent;
+            color: white;
+        }
 
-.glass-card .card-title,
-.glass-card .card-text,
-.glass-card li,
-.glass-card h6 {
-    color: white;
-}
+        .glass-card .card-title,
+        .glass-card .card-text,
+        .glass-card li,
+        .glass-card h6 {
+            color: white;
+        }
 
-.glass-card hr {
-    border-color: rgba(255, 255, 255, 0.3);
-}
+        .glass-card hr {
+            border-color: rgba(255, 255, 255, 0.3);
+        }
 
-.glass-card .btn-primary {
-    background: rgba(13, 110, 253, 0.7);
-    border: none;
-}
+        .glass-card .btn-primary {
+            background: rgba(13, 110, 253, 0.7);
+            border: none;
+        }
 
-.glass-card .btn-primary:hover {
-    background: rgba(13, 110, 253, 0.9);
-}
+        .glass-card .btn-primary:hover {
+            background: rgba(13, 110, 253, 0.9);
+        }
 
-.glass-card .card-img-top {
-    opacity: 0.9;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-}
+        .glass-card .card-img-top {
+            opacity: 0.9;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -163,8 +163,9 @@
         <!-- big -->
         <nav class="navbar navbar-expand-sm mixcolor navbar-dark sticky-top">
             <div class="container-fluid">
-                <img src="{% static 'Images/logo1.png' %}" class="img-thumbnail" alt="OHIBU Logo" width="40"  height="40" >
-                        <h6 class="smmallFont text-center p-2 text-white">Over Hills Business Unit</h6>
+                <img src="{% static 'Images/logo1.png' %}" class="img-thumbnail" alt="OHIBU Logo" width="40"
+                    height="40">
+                <h6 class="smmallFont text-center p-2 text-white">Over Hills Business Unit</h6>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                     data-bs-target="#collapsibleNavbar">
                     <span class="navbar-toggler-icon"></span>
@@ -172,28 +173,48 @@
                 <div class="collapse navbar-collapse" id="collapsibleNavbar">
                     <ul class="nav ohibu-nav nav-tabs ms-auto me-5">
                         <li class="nav-item">
-                                <a class="nav-link active" href="#">Home</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#service">Services</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="#" class="nav-link" type="button" data-bs-toggle="modal"
-                                    data-bs-target="#orderNow">Order Now</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" type="button" data-bs-toggle="modal"
-                                    data-bs-target="#animalfeed">Animal Feed</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#">Link</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#aboutUs">About Us</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="http://127.0.0.1:8000/admin" class="btn btn-primary">Login</a>
-                            </li>
+                            <a class="nav-link active" href="#">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#service">Services</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#aboutUs">About Us</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" type="button" data-bs-toggle="modal"
+                                data-bs-target="#animalfeed">Animal Feed</a>
+                        </li>
+                        <li class="nav-item">
+                            {% if user.is_authenticated %}
+                            <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#orderNow">Order
+                                Now</a>
+                            {% else %}
+                            <a href="#" class="btn btn-primary" onclick="markOrderIntent()" data-bs-toggle="modal"
+                                data-bs-target="#authModal">Order Now</a>
+                            {% endif %}
+                        </li>
+                        
+                        {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <span class="nav-link">Welcome, {{ user.first_name|default:user.username }}</span>
+                        </li>
+                        <li class="nav-item">
+                            <form method="post" action="{% url 'logout' %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary">Logout</button>
+                            </form>
+                        </li>
+                        {% else %}
+                        <li class="nav-item">
+                            <a href="#" class="btn btn-primary" data-bs-toggle="modal"
+                                data-bs-target="#authModal">Login</a>
+                        </li>
+                        {% endif %}
+
+                        <!-- <li class="nav-item">
+                            <a href="http://127.0.0.1:8000/admin" class="btn btn-primary">Login</a>
+                        </li> -->
                     </ul>
                 </div>
             </div>
@@ -201,7 +222,7 @@
 
         <!-- end  -->
         <div class="row " id="bgimage">
-           
+
 
             <div class="row pt-5">
                 <div class="col-12">
@@ -319,7 +340,7 @@
 
         </section>
     </div>
-    {% include 'modal.html' %}
+    {% include 'auth.html' %}
     {% include 'order.html' %}
     {% include 'desc.html' %}
     {% include 'animal_feed.html' %}

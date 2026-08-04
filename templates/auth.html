@@ -1,0 +1,246 @@
+<!-- modal.html -->
+<style>
+    #authModal .modal-content {
+        background: linear-gradient(160deg, rgba(73, 12, 67, 0.35) 0%, rgba(41, 20, 56, 0.3) 50%, rgba(20, 12, 35, 0.35) 100%);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 18px;
+        color: #fff;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    }
+
+    #authModal .modal-header,
+    #authModal .modal-footer {
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    #authModal .form-control {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #fff;
+        border-radius: 8px;
+        padding: 0.7rem 0.9rem;
+    }
+
+    #authModal .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    #authModal .form-control:focus {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: #b383bf;
+        color: #fff;
+        box-shadow: 0 0 0 0.2rem rgba(179, 131, 191, 0.25);
+    }
+
+    #authModal .btn-purple {
+        background: linear-gradient(90deg, #7a3fae 0%, #9256c9 100%);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 0.65rem;
+        font-weight: 500;
+    }
+
+    #authModal .btn-purple:hover {
+        background: linear-gradient(90deg, #8a4bc2 0%, #a366db 100%);
+        color: #fff;
+    }
+
+    #authModal a.link-accent {
+        color: #c9a0d6;
+        text-decoration: none;
+    }
+
+    #authModal a.link-accent:hover {
+        text-decoration: underline;
+    }
+
+    #authModal .form-check-input:checked {
+        background-color: #9256c9;
+        border-color: #9256c9;
+    }
+
+    #authModal .btn-close {
+        filter: invert(1) grayscale(100%) brightness(200%);
+    }
+
+    #authModal .errorlist {
+        list-style: none;
+        padding-left: 0;
+        margin: 0.25rem 0 0;
+        color: #ff9b9b;
+        font-size: 0.85rem;
+    }
+</style>
+
+<!-- Auth Modal -->
+<div class="modal fade" id="authModal" tabindex="-1" aria-labelledby="authModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content p-2">
+
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body px-4 pb-4">
+
+                <!-- ================= REGISTER PANE ================= -->
+                <div id="registerPane" style="display:none;">
+                    <h3 class="fw-bold mb-1">Create an account</h3>
+                    <p class="mb-4" style="color: rgba(255,255,255,0.6);">
+                        Already have an account?
+                        <a href="#" class="link-accent" onclick="showPane('login'); return false;">Log in</a>
+                    </p>
+
+                    <form method="post" action="{% url 'register' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" id="id_register_next" value="">
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                {{ register_form.first_name }}
+                                {{ register_form.first_name.errors }}
+                            </div>
+                            <div class="col-6">
+                                {{ register_form.last_name }}
+                                {{ register_form.last_name.errors }}
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                {{ register_form.username }}
+                                {{ register_form.username.errors }}
+                            </div>
+                            <div class="col-6">
+                                {{ register_form.email }}
+                                {{ register_form.email.errors }}
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                {{ register_form.password1 }}
+                                {{ register_form.password1.errors }}
+                            </div>
+                            <div class="col-6">
+                                {{ register_form.password2 }}
+                                {{ register_form.password2.errors }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ register_form.telephone }}
+                            {{ register_form.telephone.errors }}
+                        </div>
+
+                        <div class="row g-2 mb-2">
+                            <div class="col-6">
+                                {{ register_form.district }}
+                                {{ register_form.district.errors }}
+                            </div>
+                            <div class="col-6">
+                                {{ register_form.sector }}
+                                {{ register_form.sector.errors }}
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                {{ register_form.cell }}
+                                {{ register_form.cell.errors }}
+                            </div>
+                            <div class="col-6">
+                                {{ register_form.village }}
+                                {{ register_form.village.errors }}
+                            </div>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            {{ register_form.terms }}
+                            <label class="form-check-label" for="id_terms"
+                                style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">
+                                I agree to the <a href="#" class="link-accent">Terms &amp; Conditions</a>
+                            </label>
+                            {{ register_form.terms.errors }}
+                        </div>
+
+                        <button type="submit" class="btn btn-purple w-100">Create account</button>
+                    </form>
+                </div>
+
+                <!-- ================= LOGIN PANE ================= -->
+                <div id="loginPane">
+                    <h3 class="fw-bold mb-1">Welcome back</h3>
+                    <p class="mb-4" style="color: rgba(255,255,255,0.6);">
+                        Don't have an account?
+                        <a href="#" class="link-accent" onclick="showPane('register'); return false;">Create one</a>
+                    </p>
+
+                    <form method="post" action="{% url 'login' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" id="id_login_next" value="">
+                        <div class="mb-3">
+                            {{ login_form.email }}
+                            {{ login_form.email.errors }}
+                        </div>
+                        <div class="mb-3 position-relative">
+                            {{ login_form.password }}
+                            {{ login_form.password.errors }}
+                            <span class="position-absolute"
+                                style="right:14px; top:10px; cursor:pointer; color: rgba(255,255,255,0.5);"
+                                onclick="togglePassword('id_password', this)">
+                                &#128065;
+                            </span>
+                        </div>
+                        {% if login_form.non_field_errors %}
+                        <div class="errorlist mb-2">{{ login_form.non_field_errors }}</div>
+                        {% endif %}
+                        <div class="d-flex justify-content-end mb-3">
+                            <a href="#" class="link-accent" style="font-size: 0.85rem;">Forgot password?</a>
+                        </div>
+                        <button type="submit" class="btn btn-purple w-100">Log in</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showPane(pane) {
+        document.getElementById('registerPane').style.display = (pane === 'register') ? 'block' : 'none';
+        document.getElementById('loginPane').style.display = (pane === 'login') ? 'block' : 'none';
+    }
+
+    function togglePassword(fieldId, el) {
+        const field = document.getElementById(fieldId);
+        if (field.type === 'password') {
+            field.type = 'text';
+            el.innerHTML = '&#128064;';
+        } else {
+            field.type = 'password';
+            el.innerHTML = '&#128065;';
+        }
+    }
+
+    function markOrderIntent() {
+        document.getElementById('id_login_next').value = 'order';
+        document.getElementById('id_register_next').value = 'order';
+    }
+
+    {% if open_modal == 'orderNow' %}
+document.addEventListener('DOMContentLoaded', function () {
+    var modal = new bootstrap.Modal(document.getElementById('orderNow'));
+    modal.show();
+});
+{% elif open_modal %}
+document.addEventListener('DOMContentLoaded', function () {
+    showPane('{{ open_modal }}');
+    var modal = new bootstrap.Modal(document.getElementById('authModal'));
+    modal.show();
+});
+{% endif %}
+</script>

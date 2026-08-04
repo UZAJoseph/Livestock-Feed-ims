@@ -1,27 +1,121 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 from django.template import loader
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.contrib import messages
 from .models import Animal, Order, Product, FeedType
 from django.db.models import Sum, F, DecimalField
 from django.db.models.functions import Coalesce
 from django.contrib.admin.views.decorators import staff_member_required
 from .models import Order, Sale, SaleItem, Product, Animal, FeedType
+from .forms import RegisterForm, LoginForm
 
 
 
-def study(request):
-    return render (request, 'h2.html')
+
+
+
+
+
+def _base_context(request, **extra):
+    context = {
+        'animals': Animal.objects.all().order_by('name'),
+        'products': Product.objects.select_related('feed_type', 'feed_type__animal', 'store').filter(quantity__gt=0),
+        'register_form': RegisterForm(),
+        'login_form': LoginForm(),
+        'profile': getattr(request.user, 'profile', None) if request.user.is_authenticated else None,
+    }
+    context.update(extra)
+    return context
+
+
+def register_view(request):
+    if request.method == 'POST':
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            auth_login(request, user)
+            messages.success(request, f"Welcome, {user.first_name}! Your account was created.")
+            if request.POST.get('next') == 'order':
+                request.session['open_order_modal'] = True
+            return redirect('index')
+        else:
+            messages.error(request, "Please fix the errors below.")
+            return render(request, 'base.html', _base_context(request, register_form=form, open_modal='register'))
+    return redirect('index')
+
+
+def login_view(request):
+    if request.method == 'POST':
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            user = form.cleaned_data['user']
+            auth_login(request, user)
+            messages.success(request, f"Welcome back, {user.first_name}!")
+
+            if user.is_staff:
+                return redirect('/admin/')
+
+            if request.POST.get('next') == 'order':
+                request.session['open_order_modal'] = True
+            return redirect('index')
+        else:
+            messages.error(request, "Please fix the errors below.")
+            return render(request, 'base.html', _base_context(request, login_form=form, open_modal='login'))
+    return redirect('index')
+
 
 def index(request):
-    animals = Animal.objects.all().order_by('name')
-    products = Product.objects.select_related('feed_type', 'feed_type__animal', 'store').filter(quantity__gt=0)
-    return render(request, 'base.html', {'animals': animals, 'products': products})
+    context = _base_context(request)
+    if request.session.pop('open_order_modal', False):
+        context['open_modal'] = 'orderNow'
+    return render(request, 'base.html', context)
 
-# def index(request):
 
-#     animals = Animal.objects.prefetch_related('feed_types').all()
-#     return render (request, 'base.html', {'animals':animals})
+def logout_view(request):
+    auth_logout(request)
+    messages.info(request, "You've been logged out.")
+    return redirect('index')
+
+
+@login_required(login_url='/')
+def order_form(request):
+    profile = getattr(request.user, 'profile', None)
+
+    if request.method == 'POST':
+        product_id = request.POST.get('product')
+        quantity = request.POST.get('quantity')
+
+        try:
+            product = Product.objects.get(pk=product_id)
+            quantity = float(quantity)
+
+            if quantity <= 0:
+                messages.error(request, "Quantity must be greater than 0.")
+            elif quantity > product.quantity:
+                messages.error(request, f"Only {product.quantity} available in stock.")
+            else:
+                Order.objects.create(
+                    user=request.user,
+                    product=product,
+                    quantity=quantity,
+                    unit_price=product.default_price,
+                    full_name=f"{request.user.first_name} {request.user.last_name}".strip(),
+                    telephone=profile.telephone if profile else '',
+                    district=profile.district if profile else '',
+                    sector=profile.sector if profile else '',
+                    cell=profile.cell if profile else '',
+                )
+                messages.success(request, "Your order has been submitted! We'll contact you shortly to confirm.")
+                return redirect('index')
+
+        except Product.DoesNotExist:
+            messages.error(request, "Selected product not found.")
+        except (ValueError, TypeError):
+            messages.error(request, "Invalid quantity.")
+
+    return render(request, 'base.html', _base_context(request))
 
 def _apply_common_filters(qs, request, animal_field, feedtype_field, date_field=None):
     animal_id = request.GET.get('animal')
@@ -157,47 +251,6 @@ def get_feed_description(request, feedtype_id):
     })
 
 
-def order_form(request):
-    products = Product.objects.select_related('feed_type', 'feed_type__animal', 'store').filter(quantity__gt=0)
-
-    if request.method == 'POST':
-        product_id = request.POST.get('product')
-        quantity = request.POST.get('quantity')
-        full_name = request.POST.get('full_name')
-        telephone = request.POST.get('telephone')
-        district = request.POST.get('district')
-        sector = request.POST.get('sector')
-        cell = request.POST.get('cell')
-
-        try:
-            product = Product.objects.get(pk=product_id)
-            quantity = float(quantity)
-
-            if quantity <= 0:
-                messages.error(request, "Quantity must be greater than 0.")
-            elif quantity > product.quantity:
-                messages.error(request, f"Only {product.quantity} available in stock.")
-            else:
-                Order.objects.create(
-                    product=product,
-                    quantity=quantity,
-                    unit_price=product.default_price,
-                    full_name=full_name,
-                    telephone=telephone,
-                    district=district,
-                    sector=sector,
-                    cell=cell,
-                )
-                messages.success(request, "Your order has been submitted! We'll contact you shortly to confirm.")
-                return redirect('home')
-
-        except Product.DoesNotExist:
-            messages.error(request, "Selected product not found.")
-        except (ValueError, TypeError):
-            messages.error(request, "Invalid quantity.")
-
-    return render(request, 'home.html', {'products': products})
-    
 
 def animal_list(request):
     animals = Animal.objects.all().order_by('name')

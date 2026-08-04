@@ -4,11 +4,27 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 
 
 
 #add model
+
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    telephone = models.CharField(max_length=20)
+    district = models.CharField(max_length=100)
+    sector = models.CharField(max_length=100)
+    cell = models.CharField(max_length=100)
+    village = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.user.username}'s profile"
+
+
+
 class District(models.Model):
     name = models.CharField(max_length=100, unique=True)
 
@@ -101,6 +117,7 @@ class PaymentMethod(models.TextChoices):
 
 
 class Order(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders' )
     class Status(models.TextChoices):
         PENDING = 'pending', 'Pending'
         CONFIRMED = 'confirmed', 'Confirmed'

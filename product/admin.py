@@ -1,6 +1,9 @@
 from django.contrib import admin, messages
 from django.utils import timezone
 from django.shortcuts import render
+from django.contrib.auth.models import User
+from django.contrib.auth.admin import UserAdmin
+from .models import UserProfile
 from django import forms
 from django.utils.html import format_html
 from django.core.exceptions import ValidationError
@@ -9,6 +12,18 @@ from .models import District, Sector, Store, Store, FeedType, Animal, Measure, P
 
 # Register your models here.
 
+
+
+class UserProfileInline(admin.StackedInline):
+    model = UserProfile
+    can_delete = False
+    verbose_name_plural = 'Profile'
+
+class CustomUserAdmin(UserAdmin):
+    inlines = (UserProfileInline,)
+
+admin.site.unregister(User)
+admin.site.register(User, CustomUserAdmin)
 
 class SaleItemInline(admin.TabularInline):
     model = SaleItem
