@@ -20,7 +20,7 @@ from django.shortcuts import render
 from .models import Order, Product
 
 
-
+@staff_member_required
 def model_summary_data(request):
     counts = {
         "Users": User.objects.count(),
@@ -45,11 +45,11 @@ def model_summary_data(request):
 
 DECIMAL = DecimalField(max_digits=12, decimal_places=2)
 
-
+@staff_member_required
 def dashboard(request):
     return render(request, "dashboard.html")
 
-
+@staff_member_required
 def dashboard_kpis(request):
     """Quick summary numbers shown as cards at the top of the dashboard."""
     confirmed = Order.objects.filter(status=Order.Status.CONFIRMED)
@@ -65,7 +65,7 @@ def dashboard_kpis(request):
         "low_stock_products": Product.objects.filter(quantity__lte=5).count(),
     })
 
-
+@staff_member_required
 def sales_summary_data(request):
     """Revenue per day, confirmed orders only."""
     data = (
@@ -84,7 +84,7 @@ def sales_summary_data(request):
         "counts": [d["count"] for d in data],
     })
 
-
+@staff_member_required
 def top_products_data(request):
     """Top 5 feed types by revenue (Product has no standalone 'name' field)."""
     data = (
@@ -99,6 +99,7 @@ def top_products_data(request):
     })
 
 
+@staff_member_required
 def orders_by_status_data(request):
     status_labels = dict(Order.Status.choices)
     data = Order.objects.values("status").annotate(count=Count("id"))
@@ -108,6 +109,7 @@ def orders_by_status_data(request):
     })
 
 
+@staff_member_required
 def revenue_by_customer_data(request):
     data = (
         Order.objects.filter(status=Order.Status.CONFIRMED)
@@ -228,6 +230,7 @@ def order_form(request):
                     cell=profile.cell if profile else '',
                 )
                 messages.success(request, "Your order has been submitted! We'll contact you shortly to confirm.")
+                request.session['open_order_modal'] = True
                 return redirect('index')
 
         except Product.DoesNotExist:
