@@ -3,160 +3,529 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
     <style>
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            background: #f4f6f8;
+        :root {
+            --bg-deep: #120a1f;
+            --bg-mid: #1f1130;
+            --bg-glow-1: #7a3fae;
+            --bg-glow-2: #4a1f6b;
+            --glass-fill: rgba(255, 255, 255, 0.05);
+            --glass-fill-hover: rgba(255, 255, 255, 0.09);
+            --glass-border: rgba(255, 255, 255, 0.14);
+            --accent: #9256c9;
+            --accent-soft: #c9a0d6;
+            --text-primary: #ffffff;
+            --text-muted: rgba(255, 255, 255, 0.58);
+            --text-faint: rgba(255, 255, 255, 0.38);
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body {
             margin: 0;
-            padding: 24px;
+            padding: 0;
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, Helvetica, Arial, sans-serif;
+            color: var(--text-primary);
+            background:
+                radial-gradient(ellipse 900px 600px at 8% -10%, rgba(122, 63, 174, 0.35), transparent 60%),
+                radial-gradient(ellipse 800px 700px at 105% 15%, rgba(146, 86, 201, 0.22), transparent 55%),
+                radial-gradient(ellipse 700px 500px at 50% 110%, rgba(74, 31, 107, 0.35), transparent 60%),
+                linear-gradient(160deg, #17091f 0%, #120a1f 45%, #0d0817 100%);
+            background-attachment: fixed;
         }
-        h1 {
-            margin-bottom: 24px;
-            color: #222;
+
+        h1, h2, h3 {
+            font-family: 'Sora', 'Inter', sans-serif;
+            margin: 0;
         }
-        .grid {
+
+        .shell {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
+            grid-template-columns: 250px 1fr;
+            gap: 22px;
+            padding: 28px;
+            max-width: 1440px;
+            margin: 0 auto;
         }
-        .card {
-            background: #fff;
+
+        /* ---------- Topbar ---------- */
+        .topbar {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 24px;
+            border-radius: 16px;
+            background: var(--glass-fill);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .topbar .eyebrow {
+            font-size: 12px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--accent-soft);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .topbar h1 {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .topbar .note {
+            font-size: 12.5px;
+            color: var(--text-faint);
+            max-width: 260px;
+            text-align: right;
+            line-height: 1.5;
+        }
+
+        /* ---------- Sidebar ---------- */
+        .sidebar {
+            border-radius: 18px;
+            background: var(--glass-fill);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 18px 14px;
+            height: fit-content;
+            position: sticky;
+            top: 28px;
+        }
+
+        .sidebar .label {
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-faint);
+            padding: 4px 10px 12px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 11px 12px;
+            margin-bottom: 4px;
             border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-muted);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            text-align: left;
+            cursor: pointer;
+            transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
         }
-        .card h2 {
-            margin-top: 0;
-            font-size: 16px;
-            color: #444;
+
+        .nav-item .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--text-faint);
+            flex-shrink: 0;
+            transition: background 0.15s ease, box-shadow 0.15s ease;
         }
+
+        .nav-item:hover {
+            background: var(--glass-fill-hover);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(122, 63, 174, 0.35), rgba(146, 86, 201, 0.12));
+            border-color: rgba(201, 160, 214, 0.35);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active .dot {
+            background: var(--accent-soft);
+            box-shadow: 0 0 8px rgba(201, 160, 214, 0.9);
+        }
+
+        .sidebar .foot-note {
+            margin-top: 14px;
+            padding: 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px dashed rgba(255, 255, 255, 0.12);
+            font-size: 11.5px;
+            line-height: 1.5;
+            color: var(--text-faint);
+        }
+
+        /* ---------- Main column ---------- */
+        .main {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .stat-card {
+            border-radius: 16px;
+            background: var(--glass-fill);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 16px 18px;
+        }
+
+        .stat-card .stat-label {
+            font-size: 12px;
+            color: var(--text-faint);
+            margin-bottom: 8px;
+        }
+
+        .stat-card .stat-value {
+            font-family: 'Sora', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        /* ---------- Visual panel ---------- */
+        .panel {
+            border-radius: 20px;
+            background: var(--glass-fill);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            padding: 22px 24px 26px;
+            flex: 1;
+            min-height: 460px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-head {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+
+        .panel-head h2 {
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .panel-head span {
+            font-size: 12px;
+            color: var(--text-faint);
+        }
+
+        .chart-wrap {
+            position: relative;
+            flex: 1;
+            min-height: 340px;
+        }
+
+        .chart-slot {
+            position: absolute;
+            inset: 0;
+            display: none;
+        }
+
+        .chart-slot.active {
+            display: block;
+        }
+
+        /* Overview: mini grid of all four */
+        #overviewGrid {
+            display: none;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            flex: 1;
+        }
+
+        #overviewGrid.active {
+            display: grid;
+        }
+
+        .mini-card {
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.035);
+            border: 1px solid var(--glass-border);
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .mini-card h3 {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .mini-card .mini-chart {
+            position: relative;
+            flex: 1;
+            min-height: 150px;
+        }
+
         canvas {
-            max-height: 320px;
+            width: 100% !important;
+            height: 100% !important;
         }
-        @media (max-width: 900px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
+
+        @media (max-width: 980px) {
+            .shell { grid-template-columns: 1fr; }
+            .sidebar { position: static; }
+            .stats { grid-template-columns: 1fr 1fr; }
+            #overviewGrid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
-    <h1>Dashboard</h1>
+    <div class="shell">
 
-    <div class="grid">
-        <div class="card">
-            <h2>Revenue Trend (Confirmed Orders)</h2>
-            <canvas id="salesChart"></canvas>
+        <div class="topbar">
+            <div>
+                <div class="eyebrow">Feed Store</div>
+                <h1>Overview Dashboard</h1>
+            </div>
+            <div class="note">Read-only snapshot. Manage stores, products, orders and users from the Django admin panel.</div>
         </div>
 
-        <div class="card">
-            <h2>Top 5 Products by Revenue</h2>
-            <canvas id="topProductsChart"></canvas>
-        </div>
+        <nav class="sidebar" id="sidebarNav">
+            <div class="label">Activity</div>
+            <button class="nav-item active" data-target="overview"><span class="dot"></span>Overview</button>
+            <button class="nav-item" data-target="revenue"><span class="dot"></span>Revenue Trend</button>
+            <button class="nav-item" data-target="products"><span class="dot"></span>Top Products</button>
+            <button class="nav-item" data-target="status"><span class="dot"></span>Orders by Status</button>
+            <button class="nav-item" data-target="customers"><span class="dot"></span>Top Customers</button>
+            <div class="foot-note">Select an item to focus its chart. Overview shows everything at a glance.</div>
+        </nav>
 
-        <div class="card">
-            <h2>Orders by Status</h2>
-            <canvas id="statusChart"></canvas>
-        </div>
+        <div class="main">
 
-        <div class="card">
-            <h2>Top 10 Customers by Revenue</h2>
-            <canvas id="customerChart"></canvas>
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-label">Total Revenue</div>
+                    <div class="stat-value" id="statRevenue">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Orders</div>
+                    <div class="stat-value" id="statOrders">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Top Product Revenue</div>
+                    <div class="stat-value" id="statTopProduct">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Active Customers</div>
+                    <div class="stat-value" id="statCustomers">—</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head">
+                    <h2 id="panelTitle">Overview</h2>
+                    <span id="panelSub">All charts</span>
+                </div>
+
+                <!-- Overview: compact grid of all four charts -->
+                <div id="overviewGrid" class="active">
+                    <div class="mini-card">
+                        <h3>Revenue Trend</h3>
+                        <div class="mini-chart"><canvas id="miniRevenue"></canvas></div>
+                    </div>
+                    <div class="mini-card">
+                        <h3>Top Products</h3>
+                        <div class="mini-chart"><canvas id="miniProducts"></canvas></div>
+                    </div>
+                    <div class="mini-card">
+                        <h3>Orders by Status</h3>
+                        <div class="mini-chart"><canvas id="miniStatus"></canvas></div>
+                    </div>
+                    <div class="mini-card">
+                        <h3>Top Customers</h3>
+                        <div class="mini-chart"><canvas id="miniCustomers"></canvas></div>
+                    </div>
+                </div>
+
+                <!-- Focused single-chart views -->
+                <div class="chart-wrap">
+                    <div class="chart-slot" id="slot-revenue"><canvas id="salesChart"></canvas></div>
+                    <div class="chart-slot" id="slot-products"><canvas id="topProductsChart"></canvas></div>
+                    <div class="chart-slot" id="slot-status"><canvas id="statusChart"></canvas></div>
+                    <div class="chart-slot" id="slot-customers"><canvas id="customerChart"></canvas></div>
+                </div>
+            </div>
+
         </div>
     </div>
 
     <script>
-        // ---- Revenue Trend (Line chart) ----
-        fetch("{% url 'sales_summary_data' %}")
-            .then(res => res.json())
-            .then(data => {
-                new Chart(document.getElementById('salesChart'), {
-                    type: 'line',
-                    data: {
-                        labels: data.labels,
-                        datasets: [{
-                            label: 'Revenue',
-                            data: data.totals,
-                            borderColor: 'rgb(75, 192, 192)',
-                            backgroundColor: 'rgba(75, 192, 192, 0.15)',
-                            tension: 0.3,
-                            fill: true,
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: { legend: { display: false } }
-                    }
-                });
-            });
+        // ---------- shared chart theming ----------
+        Chart.defaults.color = 'rgba(255,255,255,0.65)';
+        Chart.defaults.borderColor = 'rgba(255,255,255,0.08)';
+        Chart.defaults.font.family = "'Inter', sans-serif";
 
-        // ---- Top Products (Bar chart) ----
-        fetch("{% url 'top_products_data' %}")
-            .then(res => res.json())
-            .then(data => {
-                new Chart(document.getElementById('topProductsChart'), {
-                    type: 'bar',
-                    data: {
-                        labels: data.labels,
-                        datasets: [{
-                            label: 'Revenue',
-                            data: data.totals,
-                            backgroundColor: 'rgba(54, 162, 235, 0.7)',
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: { legend: { display: false } }
-                    }
-                });
-            });
+        const glassGrid = { color: 'rgba(255,255,255,0.06)' };
+        const glassTicks = { color: 'rgba(255,255,255,0.55)' };
 
-        // ---- Orders by Status (Pie chart) ----
-        fetch("{% url 'orders_by_status_data' %}")
-            .then(res => res.json())
-            .then(data => {
-                new Chart(document.getElementById('statusChart'), {
-                    type: 'pie',
-                    data: {
-                        labels: data.labels,
-                        datasets: [{
-                            data: data.counts,
-                            backgroundColor: [
-                                '#4bc0c0', '#ff9f40', '#ff6384',
-                                '#36a2eb', '#9966ff', '#ffcd56'
-                            ],
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                    }
-                });
-            });
+        let sourceData = { revenue: null, products: null, status: null, customers: null };
+        let chartInstances = {};
 
-        // ---- Revenue by Customer (Bar chart) ----
-        fetch("{% url 'revenue_by_customer_data' %}")
-            .then(res => res.json())
-            .then(data => {
-                new Chart(document.getElementById('customerChart'), {
-                    type: 'bar',
-                    data: {
-                        labels: data.labels,
-                        datasets: [{
-                            label: 'Revenue',
-                            data: data.totals,
-                            backgroundColor: 'rgba(255, 99, 132, 0.7)',
-                        }]
-                    },
-                    options: {
-                        indexAxis: 'y',
-                        responsive: true,
-                        plugins: { legend: { display: false } }
+        function fmtMoney(n) {
+            n = Number(n) || 0;
+            return n.toLocaleString(undefined, { maximumFractionDigits: 0 });
+        }
+
+        function buildLine(ctx, data, mini) {
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Revenue',
+                        data: data.totals,
+                        borderColor: '#c9a0d6',
+                        backgroundColor: 'rgba(146, 86, 201, 0.22)',
+                        pointBackgroundColor: '#9256c9',
+                        tension: 0.35,
+                        fill: true,
+                        pointRadius: mini ? 0 : 3,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: glassGrid, ticks: glassTicks },
+                        y: { grid: glassGrid, ticks: glassTicks }
                     }
-                });
+                }
             });
+        }
+
+        function buildBar(ctx, data, mini, horizontal) {
+            return new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Revenue',
+                        data: data.totals,
+                        backgroundColor: 'rgba(146, 86, 201, 0.55)',
+                        borderRadius: 6,
+                        borderColor: '#9256c9',
+                        borderWidth: 1,
+                    }]
+                },
+                options: {
+                    indexAxis: horizontal ? 'y' : 'x',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: glassGrid, ticks: glassTicks },
+                        y: { grid: glassGrid, ticks: glassTicks }
+                    }
+                }
+            });
+        }
+
+        function buildPie(ctx, data) {
+            return new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.counts,
+                        backgroundColor: ['#9256c9', '#c9a0d6', '#7a3fae', '#4a1f6b', '#b383bf', '#e6c9f0'],
+                        borderColor: 'rgba(18, 10, 31, 0.6)',
+                        borderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12 } } }
+                }
+            });
+        }
+
+        // ---------- fetch + render ----------
+        fetch("{% url 'sales_summary_data' %}").then(r => r.json()).then(data => {
+            sourceData.revenue = data;
+            chartInstances.revenueMain = buildLine(document.getElementById('salesChart'), data, false);
+            chartInstances.revenueMini = buildLine(document.getElementById('miniRevenue'), data, true);
+            const total = (data.totals || []).reduce((a, b) => a + Number(b || 0), 0);
+            document.getElementById('statRevenue').textContent = fmtMoney(total);
+        });
+
+        fetch("{% url 'top_products_data' %}").then(r => r.json()).then(data => {
+            sourceData.products = data;
+            chartInstances.productsMain = buildBar(document.getElementById('topProductsChart'), data, false, false);
+            chartInstances.productsMini = buildBar(document.getElementById('miniProducts'), data, true, false);
+            const top = Math.max(0, ...(data.totals || [0]));
+            document.getElementById('statTopProduct').textContent = fmtMoney(top);
+        });
+
+        fetch("{% url 'orders_by_status_data' %}").then(r => r.json()).then(data => {
+            sourceData.status = data;
+            chartInstances.statusMain = buildPie(document.getElementById('statusChart'), data);
+            chartInstances.statusMini = buildPie(document.getElementById('miniStatus'), data);
+            const totalOrders = (data.counts || []).reduce((a, b) => a + Number(b || 0), 0);
+            document.getElementById('statOrders').textContent = fmtMoney(totalOrders);
+        });
+
+        fetch("{% url 'revenue_by_customer_data' %}").then(r => r.json()).then(data => {
+            sourceData.customers = data;
+            chartInstances.customersMain = buildBar(document.getElementById('customerChart'), data, false, true);
+            chartInstances.customersMini = buildBar(document.getElementById('miniCustomers'), data, true, true);
+            document.getElementById('statCustomers').textContent = (data.labels || []).length;
+        });
+
+        // ---------- left-nav switching ----------
+        const titles = {
+            overview: ['Overview', 'All charts'],
+            revenue: ['Revenue Trend', 'Confirmed orders over time'],
+            products: ['Top Products', 'Ranked by revenue'],
+            status: ['Orders by Status', 'Share of all orders'],
+            customers: ['Top Customers', 'Ranked by revenue'],
+        };
+
+        document.querySelectorAll('.nav-item').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const target = btn.dataset.target;
+                document.getElementById('panelTitle').textContent = titles[target][0];
+                document.getElementById('panelSub').textContent = titles[target][1];
+
+                document.getElementById('overviewGrid').classList.toggle('active', target === 'overview');
+                document.querySelectorAll('.chart-slot').forEach(slot => slot.classList.remove('active'));
+                if (target !== 'overview') {
+                    document.getElementById('slot-' + target).classList.add('active');
+                }
+            });
+        });
     </script>
 
 </body>
