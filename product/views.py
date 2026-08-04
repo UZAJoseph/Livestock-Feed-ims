@@ -1,19 +1,126 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 from django.template import loader
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.contrib import messages
 from .models import Animal, Order, Product, FeedType
-from django.db.models import Sum, F, DecimalField
-from django.db.models.functions import Coalesce
+from django.db.models import Sum, F, DecimalField, Count
+from django.db.models.functions import Coalesce, TruncDate
 from django.contrib.admin.views.decorators import staff_member_required
-from .models import Order, Sale, SaleItem, Product, Animal, FeedType, Review
+from .models import Order, Sale, SaleItem, Product, Animal, FeedType, Review, District, Sector, Measure, Store
 from .forms import RegisterForm, LoginForm,  ReviewForm
 
+from django.contrib.auth.models import User, Group
+
+from django.db.models import Sum, Count, F, DecimalField
+from django.db.models.functions import TruncDate, Coalesce
+from django.http import JsonResponse
+from django.shortcuts import render
+from .models import Order, Product
+
+
+@permission_required('yourapp.can_view_dashboard', login_url='/')
+def model_summary_data(request):
+    counts = {
+        "Users": User.objects.count(),
+        "Groups": Group.objects.count(),
+        "Animals": Animal.objects.count(),
+        "Districts": District.objects.count(),
+        "Sectors": Sector.objects.count(),
+        "Stores": Store.objects.count(),
+        "Feed Types": FeedType.objects.count(),
+        "Measures": Measure.objects.count(),
+        "Products": Product.objects.count(),
+        "Orders": Order.objects.count(),
+        "Sales": Sale.objects.count(),
+        "Reviews": Review.objects.count(),
+    }
+    return JsonResponse({
+        "labels": list(counts.keys()),
+        "counts": list(counts.values()),
+    })
 
 
 
+DECIMAL = DecimalField(max_digits=12, decimal_places=2)
+
+@permission_required('yourapp.can_view_dashboard', login_url='/')
+def dashboard(request):
+    return render(request, "dashboard.html")
+
+@permission_required('yourapp.can_view_dashboard', login_url='/')
+def dashboard_kpis(request):
+    """Quick summary numbers shown as cards at the top of the dashboard."""
+    confirmed = Order.objects.filter(status=Order.Status.CONFIRMED)
+
+    total_revenue = confirmed.aggregate(
+        total=Coalesce(Sum(F('quantity') * F('unit_price'), output_field=DECIMAL), 0, output_field=DECIMAL)
+    )['total']
+
+    return JsonResponse({
+        "total_revenue": float(total_revenue),
+        "total_orders": Order.objects.count(),
+        "pending_orders": Order.objects.filter(status=Order.Status.PENDING).count(),
+        "low_stock_products": Product.objects.filter(quantity__lte=5).count(),
+    })
+
+@permission_required('yourapp.can_view_dashboard', login_url='/')
+def sales_summary_data(request):
+    """Revenue per day, confirmed orders only."""
+    data = (
+        Order.objects.filter(status=Order.Status.CONFIRMED)
+        .annotate(day=TruncDate("created_at"))
+        .values("day")
+        .annotate(
+            total=Sum(F('quantity') * F('unit_price'), output_field=DECIMAL),
+            count=Count("id"),
+        )
+        .order_by("day")
+    )
+    return JsonResponse({
+        "labels": [d["day"].strftime("%b %d") for d in data],
+        "totals": [float(d["total"]) for d in data],
+        "counts": [d["count"] for d in data],
+    })
+
+@permission_required('yourapp.can_view_dashboard', login_url='/')
+def top_products_data(request):
+    """Top 5 feed types by revenue (Product has no standalone 'name' field)."""
+    data = (
+        Order.objects.filter(status=Order.Status.CONFIRMED)
+        .values("product__feed_type__animal__name", "product__feed_type__name")
+        .annotate(total=Sum(F('quantity') * F('unit_price'), output_field=DECIMAL))
+        .order_by("-total")[:5]
+    )
+    return JsonResponse({
+        "labels": [f'{d["product__feed_type__animal__name"]} - {d["product__feed_type__name"]}' for d in data],
+        "totals": [float(d["total"]) for d in data],
+    })
+
+
+@permission_required('yourapp.can_view_dashboard', login_url='/')
+def orders_by_status_data(request):
+    status_labels = dict(Order.Status.choices)
+    data = Order.objects.values("status").annotate(count=Count("id"))
+    return JsonResponse({
+        "labels": [status_labels.get(d["status"], d["status"]) for d in data],
+        "counts": [d["count"] for d in data],
+    })
+
+
+@permission_required('yourapp.can_view_dashboard', login_url='/')
+def revenue_by_customer_data(request):
+    data = (
+        Order.objects.filter(status=Order.Status.CONFIRMED)
+        .values("full_name")
+        .annotate(total=Sum(F('quantity') * F('unit_price'), output_field=DECIMAL))
+        .order_by("-total")[:10]
+    )
+    return JsonResponse({
+        "labels": [d["full_name"] for d in data],
+        "totals": [float(d["total"]) for d in data],
+    })
 
 
 
@@ -22,7 +129,7 @@ from .forms import RegisterForm, LoginForm,  ReviewForm
 def _base_context(request, **extra):
     context = {
         'animals': Animal.objects.all().order_by('name'),
-        'products': Product.objects.select_related('feed_type', 'feed_type__animal', 'store').filter(quantity__gt=0),
+        'products': Product.objects.select_related('feed_type', 'feed_type__animal', 'store'),
         'register_form': RegisterForm(),
         'login_form': LoginForm(),
         'review_form': ReviewForm(),
@@ -123,6 +230,7 @@ def order_form(request):
                     cell=profile.cell if profile else '',
                 )
                 messages.success(request, "Your order has been submitted! We'll contact you shortly to confirm.")
+                request.session['open_order_modal'] = True
                 return redirect('index')
 
         except Product.DoesNotExist:
