@@ -332,9 +332,8 @@
                 <div class="col-md-4">
                     <div class="card glass-card m-2">
                         <div class="card-body">
-                            <h6 class="card-title">{{ review.user.first_name|default:review.user.username }}</h6>
-                            <p class="mb-1" style="color: rgba(255,255,255,0.6); font-size: 0.85rem;">{{
-                                review.feed_type.name }}</p>
+                            <h6 class="card-title text-dark">{{ review.user.first_name|default:review.user.username }}</h6>
+                            
                             <p class="card-text">{{ review.comment }}</p>
                         </div>
                     </div>
