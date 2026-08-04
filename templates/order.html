@@ -27,7 +27,7 @@
                         </div>
                         <div class="col-6">
                             <label class="form-label">Feed Type</label>
-                            <select id="id_feed_type" class="form-select" required disabled>
+                            <select id="id_feed_type" class="form-select" required>
                                 <option value="">-- Select feed type --</option>
                             </select>
                         </div>
@@ -44,11 +44,13 @@
                     <select id="products-data" style="display:none">
                         {% for product in products %}
                         <option value="{{ product.id }}" data-animal-id="{{ product.feed_type.animal.id }}"
-                            data-animal-name="{{ product.feed_type.animal.name }}"
-                            data-feedtype-id="{{ product.feed_type.id }}"
-                            data-feedtype-name="{{ product.feed_type.name }}" data-price="{{ product.default_price }}"
-                            data-label="{{ product.amount }}{{ product.measure.abbreviation }} - {{ product.default_price }} RWF">
-                        </option>
+        data-animal-name="{{ product.feed_type.animal.name }}"
+        data-feedtype-id="{{ product.feed_type.id }}"
+        data-feedtype-name="{{ product.feed_type.name }}"
+        data-price="{{ product.default_price }}"
+        data-quantity="{{ product.quantity }}"
+        data-label="{{ product.amount }}{{ product.measure.abbreviation }} - {{ product.default_price }} RWF">
+    </option>
                         {% endfor %}
                     </select>
 
@@ -82,34 +84,29 @@
                         </div>
                         <div class="col-6">
                             <label class="form-label">Telephone</label>
-                            <input type="text" class="form-control" readonly
-                                value="{{ profile.telephone|default:'' }}">
+                            <input type="text" class="form-control" readonly value="{{ profile.telephone|default:'' }}">
                         </div>
                     </div>
 
                     <div class="row g-2 mb-2">
                         <div class="col-6">
                             <label class="form-label">District</label>
-                            <input type="text" class="form-control" readonly
-                                value="{{ profile.district|default:'' }}">
+                            <input type="text" class="form-control" readonly value="{{ profile.district|default:'' }}">
                         </div>
                         <div class="col-6">
                             <label class="form-label">Sector</label>
-                            <input type="text" class="form-control" readonly
-                                value="{{ profile.sector|default:'' }}">
+                            <input type="text" class="form-control" readonly value="{{ profile.sector|default:'' }}">
                         </div>
                     </div>
 
                     <div class="row g-2 mb-3">
                         <div class="col-6">
                             <label class="form-label">Cell</label>
-                            <input type="text" class="form-control" readonly
-                                value="{{ profile.cell|default:'' }}">
+                            <input type="text" class="form-control" readonly value="{{ profile.cell|default:'' }}">
                         </div>
                         <div class="col-6">
                             <label class="form-label">Village</label>
-                            <input type="text" class="form-control" readonly
-                                value="{{ profile.village|default:'' }}">
+                            <input type="text" class="form-control" readonly value="{{ profile.village|default:'' }}">
                         </div>
                     </div>
 
@@ -187,102 +184,170 @@
             </style>
 
             <script>
-                document.addEventListener('DOMContentLoaded', function () {
-                    const dataSelect = document.getElementById('products-data');
-                    const productOptions = Array.from(dataSelect.options);
+document.addEventListener('DOMContentLoaded', function () {
 
-                    const animalSelect = document.getElementById('id_animal');
-                    const feedTypeSelect = document.getElementById('id_feed_type');
-                    const productSelect = document.getElementById('id_product');
-                    const quantityInput = document.getElementById('id_quantity');
-                    const unitPriceField = document.getElementById('id_unit_price');
-                    const totalPriceField = document.getElementById('id_total_price');
+    const dataSelect = document.getElementById('products-data');
+    const productOptions = Array.from(dataSelect.options);
 
-                    const animals = [];
-                    productOptions.forEach(opt => {
-                        const id = opt.dataset.animalId;
-                        const name = opt.dataset.animalName;
-                        if (!animals.some(a => a.id === id)) {
-                            animals.push({ id, name });
-                        }
-                    });
-                    animals.forEach(animal => {
-                        const option = document.createElement('option');
-                        option.value = animal.id;
-                        option.textContent = animal.name;
-                        animalSelect.appendChild(option);
-                    });
+    const animalSelect = document.getElementById('id_animal');
+    const feedTypeSelect = document.getElementById('id_feed_type');
+    const productSelect = document.getElementById('id_product');
 
-                    animalSelect.addEventListener('change', function () {
-                        const animalId = this.value;
-                        feedTypeSelect.innerHTML = '<option value="">-- Select feed type --</option>';
-                        productSelect.innerHTML = '<option value="">-- Select a package --</option>';
-                        unitPriceField.value = '';
-                        totalPriceField.value = '';
-                        productSelect.disabled = true;
+    const quantityInput = document.getElementById('id_quantity');
+    const unitPriceField = document.getElementById('id_unit_price');
+    const totalPriceField = document.getElementById('id_total_price');
 
-                        if (!animalId) {
-                            feedTypeSelect.disabled = true;
-                            return;
-                        }
 
-                        const feedTypes = [];
-                        productOptions.forEach(opt => {
-                            if (opt.dataset.animalId === animalId) {
-                                const id = opt.dataset.feedtypeId;
-                                const name = opt.dataset.feedtypeName;
-                                if (!feedTypes.some(f => f.id === id)) {
-                                    feedTypes.push({ id, name });
-                                }
-                            }
-                        });
-                        feedTypes.forEach(feedType => {
-                            const option = document.createElement('option');
-                            option.value = feedType.id;
-                            option.textContent = feedType.name;
-                            feedTypeSelect.appendChild(option);
-                        });
+    // -------------------------
+    // Load animals
+    // -------------------------
+    const animals = [];
 
-                        feedTypeSelect.disabled = false;
-                    });
+    productOptions.forEach(product => {
+        const animalId = product.dataset.animalId;
+        const animalName = product.dataset.animalName;
 
-                    feedTypeSelect.addEventListener('change', function () {
-                        const feedTypeId = this.value;
-                        productSelect.innerHTML = '<option value="">-- Select a package --</option>';
-                        unitPriceField.value = '';
-                        totalPriceField.value = '';
+        if (!animals.find(a => a.id === animalId)) {
+            animals.push({
+                id: animalId,
+                name: animalName
+            });
+        }
+    });
 
-                        if (!feedTypeId) {
-                            productSelect.disabled = true;
-                            return;
-                        }
 
-                        productOptions.forEach(opt => {
-                            if (opt.dataset.feedtypeId === feedTypeId) {
-                                const option = document.createElement('option');
-                                option.value = opt.value;
-                                option.textContent = opt.dataset.label;
-                                option.setAttribute('data-price', opt.dataset.price);
-                                productSelect.appendChild(option);
-                            }
-                        });
+    animals.forEach(animal => {
+        const option = document.createElement('option');
+        option.value = animal.id;
+        option.textContent = animal.name;
+        animalSelect.appendChild(option);
+    });
 
-                        productSelect.disabled = false;
-                    });
 
-                    function updatePrices() {
-                        const selectedOption = productSelect.options[productSelect.selectedIndex];
-                        const price = parseFloat(selectedOption ? selectedOption.getAttribute('data-price') : 0) || 0;
-                        const qty = parseFloat(quantityInput.value) || 0;
+    // -------------------------
+    // Animal changed
+    // -------------------------
+    animalSelect.addEventListener('change', function () {
+    const animalId = this.value;
 
-                        unitPriceField.value = price.toFixed(2);
-                        totalPriceField.value = (price * qty).toFixed(2);
-                    }
+    feedTypeSelect.innerHTML = '<option value="">-- Select feed type --</option>';
+    productSelect.innerHTML = '<option value="">-- Select a package --</option>';
+    feedTypeSelect.disabled = true;
+    productSelect.disabled = true;
+    unitPriceField.value = '';
+    totalPriceField.value = '';
 
-                    productSelect.addEventListener('change', updatePrices);
-                    quantityInput.addEventListener('input', updatePrices);
-                });
-            </script>
+    if (!animalId) return;
+
+    const feedTypes = [];
+
+    productOptions.forEach(product => {
+        if (product.dataset.animalId == animalId) {
+            const feedId = product.dataset.feedtypeId;
+            const feedName = product.dataset.feedtypeName;
+            const inStock = Number(product.dataset.quantity) > 0;
+
+            let feed = feedTypes.find(f => f.id == feedId);
+            if (!feed) {
+                feed = { id: feedId, name: feedName, hasStock: inStock };
+                feedTypes.push(feed);
+            } else if (inStock) {
+                feed.hasStock = true; // any in-stock product upgrades the whole feed type
+            }
+        }
+    });
+
+    feedTypes.forEach(feed => {
+        const option = document.createElement('option');
+        option.value = feed.id;
+        option.textContent = feed.hasStock ? feed.name : `${feed.name} (Out of stock)`;
+        if (!feed.hasStock) {
+            option.disabled = true;
+            option.style.color = 'rgba(255,255,255,0.4)';
+        }
+        feedTypeSelect.appendChild(option);
+    });
+
+    if (feedTypes.length > 0) {
+        feedTypeSelect.disabled = false;
+    }
+});
+
+
+
+    // -------------------------
+    // Feed type changed
+    // -------------------------
+   feedTypeSelect.addEventListener('change', function () {
+    const feedTypeId = this.value;
+
+    productSelect.innerHTML = '<option value="">-- Select a package --</option>';
+    productSelect.disabled = true;
+    unitPriceField.value = '';
+    totalPriceField.value = '';
+
+    if (!feedTypeId) return;
+
+    productOptions.forEach(product => {
+        if (product.dataset.feedtypeId == feedTypeId) {
+            const inStock = Number(product.dataset.quantity) > 0;
+
+            const option = document.createElement('option');
+            option.value = product.value;
+            option.textContent = inStock
+                ? product.dataset.label
+                : `${product.dataset.label} (Out of stock)`;
+            option.dataset.price = product.dataset.price;
+
+            if (!inStock) {
+                option.disabled = true;
+                option.style.color = 'rgba(255,255,255,0.4)';
+            }
+
+            productSelect.appendChild(option);
+        }
+    });
+
+    if (productSelect.options.length > 1) {
+        productSelect.disabled = false;
+    }
+});
+
+
+    // -------------------------
+    // Price calculation
+    // -------------------------
+    function updatePrices() {
+
+        const selected =
+            productSelect.options[productSelect.selectedIndex];
+
+
+        const price =
+            Number(selected?.dataset.price || 0);
+
+
+        const quantity =
+            Number(quantityInput.value || 0);
+
+
+        unitPriceField.value =
+            price.toFixed(2);
+
+
+        totalPriceField.value =
+            (price * quantity).toFixed(2);
+
+    }
+
+
+    productSelect.addEventListener('change', updatePrices);
+
+    quantityInput.addEventListener('input', updatePrices);
+
+
+});
+</script>
 
             <!-- Modal footer -->
             <div class="modal-footer">

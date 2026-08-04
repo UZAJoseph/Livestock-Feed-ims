@@ -127,7 +127,7 @@ def revenue_by_customer_data(request):
 def _base_context(request, **extra):
     context = {
         'animals': Animal.objects.all().order_by('name'),
-        'products': Product.objects.select_related('feed_type', 'feed_type__animal', 'store').filter(quantity__gt=0),
+        'products': Product.objects.select_related('feed_type', 'feed_type__animal', 'store'),
         'register_form': RegisterForm(),
         'login_form': LoginForm(),
         'review_form': ReviewForm(),

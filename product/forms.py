@@ -8,10 +8,6 @@ from .models import UserProfile, FeedType, Review
 
 
 class ReviewForm(forms.Form):
-    feed_type = forms.ModelChoiceField(
-        queryset=FeedType.objects.all(),
-        widget=forms.Select(attrs={'class': 'form-select'})
-    )
     comment = forms.CharField(
         widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Share your experience...'})
     )
@@ -19,7 +15,6 @@ class ReviewForm(forms.Form):
     def save(self, user):
         return Review.objects.create(
             user=user,
-            feed_type=self.cleaned_data['feed_type'],
             comment=self.cleaned_data['comment'],
         )
 
