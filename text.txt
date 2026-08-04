@@ -13,3 +13,4 @@ meeting on 3 Agust 2026
 3. on orderform combine some field
 4. Add customer name to sales
 5. pre-order, specify when
+6. Access of Industry.
