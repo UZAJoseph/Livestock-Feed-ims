@@ -1,0 +1,163 @@
+<!-- dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 24px;
+        }
+        h1 {
+            margin-bottom: 24px;
+            color: #222;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+        .card h2 {
+            margin-top: 0;
+            font-size: 16px;
+            color: #444;
+        }
+        canvas {
+            max-height: 320px;
+        }
+        @media (max-width: 900px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Dashboard</h1>
+
+    <div class="grid">
+        <div class="card">
+            <h2>Revenue Trend (Confirmed Orders)</h2>
+            <canvas id="salesChart"></canvas>
+        </div>
+
+        <div class="card">
+            <h2>Top 5 Products by Revenue</h2>
+            <canvas id="topProductsChart"></canvas>
+        </div>
+
+        <div class="card">
+            <h2>Orders by Status</h2>
+            <canvas id="statusChart"></canvas>
+        </div>
+
+        <div class="card">
+            <h2>Top 10 Customers by Revenue</h2>
+            <canvas id="customerChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // ---- Revenue Trend (Line chart) ----
+        fetch("{% url 'sales_summary_data' %}")
+            .then(res => res.json())
+            .then(data => {
+                new Chart(document.getElementById('salesChart'), {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Revenue',
+                            data: data.totals,
+                            borderColor: 'rgb(75, 192, 192)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.15)',
+                            tension: 0.3,
+                            fill: true,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            });
+
+        // ---- Top Products (Bar chart) ----
+        fetch("{% url 'top_products_data' %}")
+            .then(res => res.json())
+            .then(data => {
+                new Chart(document.getElementById('topProductsChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Revenue',
+                            data: data.totals,
+                            backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            });
+
+        // ---- Orders by Status (Pie chart) ----
+        fetch("{% url 'orders_by_status_data' %}")
+            .then(res => res.json())
+            .then(data => {
+                new Chart(document.getElementById('statusChart'), {
+                    type: 'pie',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            data: data.counts,
+                            backgroundColor: [
+                                '#4bc0c0', '#ff9f40', '#ff6384',
+                                '#36a2eb', '#9966ff', '#ffcd56'
+                            ],
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                    }
+                });
+            });
+
+        // ---- Revenue by Customer (Bar chart) ----
+        fetch("{% url 'revenue_by_customer_data' %}")
+            .then(res => res.json())
+            .then(data => {
+                new Chart(document.getElementById('customerChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Revenue',
+                            data: data.totals,
+                            backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            });
+    </script>
+
+</body>
+</html>
