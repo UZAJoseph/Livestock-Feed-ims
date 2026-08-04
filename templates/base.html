@@ -195,7 +195,7 @@
                             {% endif %}
                         </li>
 
-                        {% if user.is_authenticated and user.is_staff %}
+                        {% if user.is_authenticated and perms.yourapp.can_view_dashboard %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
                         </li>

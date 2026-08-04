@@ -136,6 +136,12 @@ class PaymentMethod(models.TextChoices):
 
 class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders' )
+    class Meta:
+        ordering = ['-created_at']  # keep whatever you already have here
+        permissions = [
+            ("can_view_dashboard", "Can view dashboard"),
+        ]
+
     class Status(models.TextChoices):
         PENDING = 'pending', 'Pending'
         CONFIRMED = 'confirmed', 'Confirmed'
