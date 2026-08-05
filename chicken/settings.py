@@ -74,14 +74,16 @@ WSGI_APPLICATION = 'chicken.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+import os
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'chicken',
-        'USER': 'root',
-        'PASSWORD':'12345',
-        'HOST': 'localhost',
-        'PORT':'3306',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME', 'chicken'),
+        'USER': os.environ.get('DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
 
@@ -141,3 +143,7 @@ SESSION_SAVE_EVERY_REQUEST = True
 
 # End the session when the browser closes
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+import os
+
+ALLOWED_HOSTS = [os.environ.get('RENDER_EXTERNAL_HOSTNAME', 'localhost')]
