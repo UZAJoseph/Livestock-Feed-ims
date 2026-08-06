@@ -7,12 +7,27 @@ from .models import UserProfile
 from django import forms
 from django.utils.html import format_html
 from django.core.exceptions import ValidationError
-from .models import District, Sector, Store, Store, FeedType, Animal, Measure, Product, Order, Sale, SaleItem, PaymentMethod, PaymentStatus
+from .models import (
+    District, Sector, Store, Store, FeedType, Animal, 
+    Measure, Product, Order, Sale, SaleItem, PaymentMethod,
+      PaymentStatus, Restock
+)
 
 
 # Register your models here.
 
+@admin.register(Restock)
+class RestockAdmin(admin.ModelAdmin):
+    list_display = ('product', 'quantity', 'cost_per_unit', 'total_cost', 'restocked_by', 'created_at')
+    list_filter = ('created_at', 'product__store', 'restocked_by')
+    search_fields = ('product__feed_type__name', 'note')
+    readonly_fields = ('created_at',)
+    autocomplete_fields = ('product',)
 
+    def save_model(self, request, obj, form, change):
+        if not obj.pk:  # new restock
+            obj.restocked_by = request.user
+        super().save_model(request, obj, form, change)
 
 class UserProfileInline(admin.StackedInline):
     model = UserProfile
@@ -108,41 +123,6 @@ def confirm_orders(modeladmin, request, queryset):
     )
     
 
-# @admin.action(description="Confirm selected orders (deduct stock & record sale)")
-# def confirm_orders(modeladmin, request, queryset):
-#     confirmed_count = 0
-#     skipped_count = 0
-
-#     for order in queryset:
-#         if order.status != Order.Status.PENDING:
-#             skipped_count += 1
-#             continue
-
-#         try:
-#             sale = Sale.objects.create(store=order.product.store, sold_by=request.user)
-#             SaleItem.objects.create(
-#                 sale=sale,
-#                 product=order.product,
-#                 quantity=order.quantity,
-#                 unit_price=order.unit_price,
-#             )
-
-#             order.status = Order.Status.CONFIRMED
-#             order.confirmed_by = request.user
-#             order.confirmed_at = timezone.now()
-#             order.save(update_fields=['status', 'confirmed_by', 'confirmed_at'])
-
-#             confirmed_count += 1
-
-#         except ValidationError as e:
-#             skipped_count += 1
-#             messages.warning(request, f"Order #{order.pk} skipped: {e.message}")
-
-#     if confirmed_count:
-#         messages.success(request, f"{confirmed_count} order(s) confirmed — stock updated, sales recorded.")
-#     if skipped_count:
-#         messages.warning(request, f"{skipped_count} order(s) skipped (already processed or insufficient stock).")
-
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
@@ -210,7 +190,7 @@ class MeasureAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('store', 'feed_type', 'quantity', 'measure','amount', 'cost', 'default_price')
+    list_display = ('store', 'feed_type', 'stock_quantity', 'measure','amount', 'cost', 'default_price')
     list_filter = ('store', 'feed_type__animal', 'measure')
     search_fields = ('feed_type__name', 'store__name')
 
