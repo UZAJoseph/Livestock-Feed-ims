@@ -328,13 +328,13 @@ class SaleItem(models.Model):
         with transaction.atomic():
             product = Product.objects.select_for_update().get(pk=self.product_id)
 
-            if is_new and product.quantity < self.quantity:
+            if is_new and product.stock_quantity < self.quantity:
                 raise ValidationError(
-                    f"Not enough stock for {product}. Available: {product.quantity}"
+                    f"Not enough stock for {product}. Available: {product.stock_quantity}"
                 )
 
             super().save(*args, **kwargs)
 
             if is_new:
-                product.quantity -= self.quantity
-                product.save(update_fields=['quantity'])
+                product.stock_quantity -= self.quantity
+                product.save(update_fields=['stock_quantity'])

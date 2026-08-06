@@ -322,7 +322,7 @@ def order_form(request):
             if quantity <= 0:
                 messages.error(request, "Quantity must be greater than 0.")
             elif quantity > product.stock_quantity:
-                messages.error(request, f"Only {product.quantity} available in stock.")
+                messages.error(request, f"Only {product.stock_quantity} available in stock.")
             else:
                 Order.objects.create(
                     user=request.user,
