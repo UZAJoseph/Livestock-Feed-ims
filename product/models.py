@@ -209,6 +209,7 @@ class Order(models.Model):
         ordering = ['-created_at']  # keep whatever you already have here
         permissions = [
             ("can_view_dashboard", "Can view dashboard"),
+            ("can_view_admin_panel", "Can view admin panel link"), 
         ]
 
     class Status(models.TextChoices):

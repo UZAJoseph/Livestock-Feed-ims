@@ -77,6 +77,37 @@
             -webkit-backdrop-filter: blur(16px);
         }
 
+        .topbar-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .topbar-links {
+            display: flex;
+            gap: 10px;
+        }
+
+        .topbar-link {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--accent-soft);
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.03);
+            transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .topbar-link:hover {
+            background: var(--glass-fill-hover);
+            color: var(--text-primary);
+            border-color: rgba(201, 160, 214, 0.35);
+        }
+
         .topbar .eyebrow {
             font-size: 12px;
             letter-spacing: 0.14em;
@@ -427,7 +458,13 @@
                 <div class="eyebrow">Feed Store</div>
                 <h1>Overview Dashboard</h1>
             </div>
-            <div class="note">Read-only snapshot. Manage stores, products, orders and users from the Django admin panel.
+            <div class="topbar-right">
+                <div class="topbar-links">
+                    <a href="{% url 'index' %}" class="topbar-link">← Back to Site</a>
+                    <a href="/admin/" class="topbar-link">Django Admin</a>
+                </div>
+                <div class="note">Read-only snapshot. Manage stores, products, orders and users from the Django admin
+                    panel.</div>
             </div>
         </div>
 
@@ -446,31 +483,31 @@
         <div class="main">
 
             <div class="stats">
-    <div class="stat-card">
-        <div class="stat-label">Total Sales</div>
-        <div class="stat-value" id="statTotalSales">—</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Total Cost</div>
-        <div class="stat-value" id="statTotalCost">—</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Profit</div>
-        <div class="stat-value" id="statProfit">—</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Total Orders</div>
-        <div class="stat-value" id="statOrders">—</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Active Customers</div>
-        <div class="stat-value" id="statCustomers">—</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Products Low on Stock</div>
-        <div class="stat-value" id="statLowStock">—</div>
-    </div>
-</div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Sales</div>
+                    <div class="stat-value" id="statTotalSales">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Cost</div>
+                    <div class="stat-value" id="statTotalCost">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Profit</div>
+                    <div class="stat-value" id="statProfit">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Orders</div>
+                    <div class="stat-value" id="statOrders">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Active Customers</div>
+                    <div class="stat-value" id="statCustomers">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Products Low on Stock</div>
+                    <div class="stat-value" id="statLowStock">—</div>
+                </div>
+            </div>
 
             <div class="panel">
                 <div class="panel-head">
@@ -625,31 +662,31 @@
 
         // ---------- fetch + render ----------
         fetch("{% url 'sales_summary_data' %}").then(r => r.json()).then(data => {
-    sourceData.revenue = data;
-    chartInstances.revenueMain = buildLine(document.getElementById('salesChart'), data, false);
-    chartInstances.revenueMini = buildLine(document.getElementById('miniRevenue'), data, true);
-});
+            sourceData.revenue = data;
+            chartInstances.revenueMain = buildLine(document.getElementById('salesChart'), data, false);
+            chartInstances.revenueMini = buildLine(document.getElementById('miniRevenue'), data, true);
+        });
 
-fetch("{% url 'top_products_data' %}").then(r => r.json()).then(data => {
-    sourceData.products = data;
-    chartInstances.productsMain = buildBar(document.getElementById('topProductsChart'), data, false, false);
-    chartInstances.productsMini = buildBar(document.getElementById('miniProducts'), data, true, false);
-});
+        fetch("{% url 'top_products_data' %}").then(r => r.json()).then(data => {
+            sourceData.products = data;
+            chartInstances.productsMain = buildBar(document.getElementById('topProductsChart'), data, false, false);
+            chartInstances.productsMini = buildBar(document.getElementById('miniProducts'), data, true, false);
+        });
 
-fetch("{% url 'orders_by_status_data' %}").then(r => r.json()).then(data => {
-    sourceData.status = data;
-    chartInstances.statusMain = buildPie(document.getElementById('statusChart'), data);
-    chartInstances.statusMini = buildPie(document.getElementById('miniStatus'), data);
-    const totalOrders = (data.counts || []).reduce((a, b) => a + Number(b || 0), 0);
-    document.getElementById('statOrders').textContent = fmtMoney(totalOrders);
-});
+        fetch("{% url 'orders_by_status_data' %}").then(r => r.json()).then(data => {
+            sourceData.status = data;
+            chartInstances.statusMain = buildPie(document.getElementById('statusChart'), data);
+            chartInstances.statusMini = buildPie(document.getElementById('miniStatus'), data);
+            const totalOrders = (data.counts || []).reduce((a, b) => a + Number(b || 0), 0);
+            document.getElementById('statOrders').textContent = fmtMoney(totalOrders);
+        });
 
-fetch("{% url 'dashboard_kpis' %}").then(r => r.json()).then(data => {
-    document.getElementById('statTotalSales').textContent = fmtMoney(data.total_sales);
-    document.getElementById('statTotalCost').textContent = fmtMoney(data.total_cost);
-    document.getElementById('statProfit').textContent = fmtMoney(data.profit);
-    document.getElementById('statLowStock').textContent = data.low_stock_products;
-});
+        fetch("{% url 'dashboard_kpis' %}").then(r => r.json()).then(data => {
+            document.getElementById('statTotalSales').textContent = fmtMoney(data.total_sales);
+            document.getElementById('statTotalCost').textContent = fmtMoney(data.total_cost);
+            document.getElementById('statProfit').textContent = fmtMoney(data.profit);
+            document.getElementById('statLowStock').textContent = data.low_stock_products;
+        });
 
         fetch("{% url 'revenue_by_customer_data' %}").then(r => r.json()).then(data => {
             sourceData.customers = data;
@@ -704,7 +741,7 @@ fetch("{% url 'dashboard_kpis' %}").then(r => r.json()).then(data => {
                 '<tr><td colspan="6">Stock data unavailable.</td></tr>';
         });
 
-       
+
         // ---------- left-nav switching ----------
         const titles = {
             overview: ['Overview', 'All charts'],

@@ -195,9 +195,15 @@
                             {% endif %}
                         </li>
 
-                        {% if user.is_authenticated and perms.yourapp.can_view_dashboard %}
+                        {% if user.is_authenticated and perms.product.can_view_dashboard %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+                        </li>
+                        {% endif %}
+
+                        {% if user.is_staff and perms.product.can_view_admin_panel %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/">Admin Panel</a>
                         </li>
                         {% endif %}
 
@@ -217,10 +223,6 @@
                                 data-bs-target="#authModal">Login</a>
                         </li>
                         {% endif %}
-
-                        <!-- <li class="nav-item">
-                            <a href="http://127.0.0.1:8000/admin" class="btn btn-primary">Login</a>
-                        </li> -->
                     </ul>
                 </div>
             </div>
@@ -332,8 +334,9 @@
                 <div class="col-md-4">
                     <div class="card glass-card m-2">
                         <div class="card-body">
-                            <h6 class="card-title text-dark">{{ review.user.first_name|default:review.user.username }}</h6>
-                            
+                            <h6 class="card-title text-dark">{{ review.user.first_name|default:review.user.username }}
+                            </h6>
+
                             <p class="card-text">{{ review.comment }}</p>
                         </div>
                     </div>
