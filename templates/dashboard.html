@@ -185,7 +185,8 @@
 
         .stats {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            /* ← changed */
             gap: 16px;
         }
 
@@ -445,23 +446,31 @@
         <div class="main">
 
             <div class="stats">
-                <div class="stat-card">
-                    <div class="stat-label">Total Revenue</div>
-                    <div class="stat-value" id="statRevenue">—</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Total Orders</div>
-                    <div class="stat-value" id="statOrders">—</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Top Product Revenue</div>
-                    <div class="stat-value" id="statTopProduct">—</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Active Customers</div>
-                    <div class="stat-value" id="statCustomers">—</div>
-                </div>
-            </div>
+    <div class="stat-card">
+        <div class="stat-label">Total Sales</div>
+        <div class="stat-value" id="statTotalSales">—</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Total Cost</div>
+        <div class="stat-value" id="statTotalCost">—</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Profit</div>
+        <div class="stat-value" id="statProfit">—</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Total Orders</div>
+        <div class="stat-value" id="statOrders">—</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Active Customers</div>
+        <div class="stat-value" id="statCustomers">—</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Products Low on Stock</div>
+        <div class="stat-value" id="statLowStock">—</div>
+    </div>
+</div>
 
             <div class="panel">
                 <div class="panel-head">
@@ -616,28 +625,31 @@
 
         // ---------- fetch + render ----------
         fetch("{% url 'sales_summary_data' %}").then(r => r.json()).then(data => {
-            sourceData.revenue = data;
-            chartInstances.revenueMain = buildLine(document.getElementById('salesChart'), data, false);
-            chartInstances.revenueMini = buildLine(document.getElementById('miniRevenue'), data, true);
-            const total = (data.totals || []).reduce((a, b) => a + Number(b || 0), 0);
-            document.getElementById('statRevenue').textContent = fmtMoney(total);
-        });
+    sourceData.revenue = data;
+    chartInstances.revenueMain = buildLine(document.getElementById('salesChart'), data, false);
+    chartInstances.revenueMini = buildLine(document.getElementById('miniRevenue'), data, true);
+});
 
-        fetch("{% url 'top_products_data' %}").then(r => r.json()).then(data => {
-            sourceData.products = data;
-            chartInstances.productsMain = buildBar(document.getElementById('topProductsChart'), data, false, false);
-            chartInstances.productsMini = buildBar(document.getElementById('miniProducts'), data, true, false);
-            const top = Math.max(0, ...(data.totals || [0]));
-            document.getElementById('statTopProduct').textContent = fmtMoney(top);
-        });
+fetch("{% url 'top_products_data' %}").then(r => r.json()).then(data => {
+    sourceData.products = data;
+    chartInstances.productsMain = buildBar(document.getElementById('topProductsChart'), data, false, false);
+    chartInstances.productsMini = buildBar(document.getElementById('miniProducts'), data, true, false);
+});
 
-        fetch("{% url 'orders_by_status_data' %}").then(r => r.json()).then(data => {
-            sourceData.status = data;
-            chartInstances.statusMain = buildPie(document.getElementById('statusChart'), data);
-            chartInstances.statusMini = buildPie(document.getElementById('miniStatus'), data);
-            const totalOrders = (data.counts || []).reduce((a, b) => a + Number(b || 0), 0);
-            document.getElementById('statOrders').textContent = fmtMoney(totalOrders);
-        });
+fetch("{% url 'orders_by_status_data' %}").then(r => r.json()).then(data => {
+    sourceData.status = data;
+    chartInstances.statusMain = buildPie(document.getElementById('statusChart'), data);
+    chartInstances.statusMini = buildPie(document.getElementById('miniStatus'), data);
+    const totalOrders = (data.counts || []).reduce((a, b) => a + Number(b || 0), 0);
+    document.getElementById('statOrders').textContent = fmtMoney(totalOrders);
+});
+
+fetch("{% url 'dashboard_kpis' %}").then(r => r.json()).then(data => {
+    document.getElementById('statTotalSales').textContent = fmtMoney(data.total_sales);
+    document.getElementById('statTotalCost').textContent = fmtMoney(data.total_cost);
+    document.getElementById('statProfit').textContent = fmtMoney(data.profit);
+    document.getElementById('statLowStock').textContent = data.low_stock_products;
+});
 
         fetch("{% url 'revenue_by_customer_data' %}").then(r => r.json()).then(data => {
             sourceData.customers = data;
@@ -692,6 +704,7 @@
                 '<tr><td colspan="6">Stock data unavailable.</td></tr>';
         });
 
+       
         // ---------- left-nav switching ----------
         const titles = {
             overview: ['Overview', 'All charts'],

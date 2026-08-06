@@ -97,14 +97,25 @@ def dashboard(request):
 @permission_required('yourapp.can_view_dashboard', login_url='/')
 def dashboard_kpis(request):
     """Quick summary numbers shown as cards at the top of the dashboard."""
-    confirmed = Order.objects.filter(status=Order.Status.CONFIRMED)
+    sale_items = SaleItem.objects.select_related('product')
 
-    total_revenue = confirmed.aggregate(
-        total=Coalesce(Sum(F('quantity') * F('unit_price'), output_field=DECIMAL), 0, output_field=DECIMAL)
-    )['total']
+    totals = sale_items.aggregate(
+        total_sales=Coalesce(
+            Sum(F('quantity') * F('unit_price'), output_field=DECIMAL), 0, output_field=DECIMAL
+        ),
+        total_cost=Coalesce(
+            Sum(F('quantity') * F('product__cost'), output_field=DECIMAL), 0, output_field=DECIMAL
+        ),
+    )
+
+    total_sales = totals['total_sales']
+    total_cost = totals['total_cost']
+    profit = total_sales - total_cost
 
     return JsonResponse({
-        "total_revenue": float(total_revenue),
+        "total_sales": float(total_sales),
+        "total_cost": float(total_cost),
+        "profit": float(profit),
         "total_orders": Order.objects.count(),
         "pending_orders": Order.objects.filter(status=Order.Status.PENDING).count(),
         "low_stock_products": Product.objects.filter(stock_quantity__lte=F('reorder_level')).count(),
