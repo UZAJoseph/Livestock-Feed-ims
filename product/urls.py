@@ -10,6 +10,7 @@ urlpatterns = [
     path("api/top-products/", views.top_products_data, name="top_products_data"),
     path("api/orders-by-status/", views.orders_by_status_data, name="orders_by_status_data"),
     path("api/revenue-by-customer/", views.revenue_by_customer_data, name="revenue_by_customer_data"),
+    path("api/stock-consumption/", views.stock_consumption_data, name="stock_consumption_data"),
     path('review/', views.review_create, name='review_create'),
     path('register/', views.register_view, name='register'),
     path('login/', views.login_view, name='login'),
