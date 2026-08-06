@@ -10,14 +10,100 @@ from django.db.models.functions import Coalesce, TruncDate
 from django.contrib.admin.views.decorators import staff_member_required
 from .models import Order, Sale, SaleItem, Product, Animal, FeedType, Review, District, Sector, Measure, Store
 from .forms import RegisterForm, LoginForm,  ReviewForm
-
+from django.utils import timezone
 from django.contrib.auth.models import User, Group
-
-from django.db.models import Sum, Count, F, DecimalField
+from datetime import timedelta
+from django.db.models import Sum, Count, F, DecimalField, ExpressionWrapper
 from django.db.models.functions import TruncDate, Coalesce
 from django.http import JsonResponse
 from django.shortcuts import render
-from .models import Order, Product
+from .models import Order, Product, PaymentMethod, PaymentStatus
+
+
+
+
+
+@permission_required('yourapp.can_view_dashboard', login_url='/')
+def payment_status_data(request):
+    status_labels = dict(PaymentStatus.choices)
+    data = (
+        SaleItem.objects
+        .values('sale__payment_status')
+        .annotate(
+            count=Count('sale', distinct=True),
+            total=Coalesce(
+                Sum(F('quantity') * F('unit_price'), output_field=DECIMAL), 0, output_field=DECIMAL
+            ),
+        )
+    )
+    return JsonResponse({
+        "labels": [status_labels.get(d["sale__payment_status"], d["sale__payment_status"]) for d in data],
+        "counts": [d["count"] for d in data],
+        "totals": [float(d["total"]) for d in data],
+    })
+
+
+@permission_required('yourapp.can_view_dashboard', login_url='/')
+def payment_method_data(request):
+    method_labels = dict(PaymentMethod.choices)
+    data = (
+        SaleItem.objects
+        .values('sale__payment_method')
+        .annotate(
+            count=Count('sale', distinct=True),
+            total=Coalesce(
+                Sum(F('quantity') * F('unit_price'), output_field=DECIMAL), 0, output_field=DECIMAL
+            ),
+        )
+    )
+    return JsonResponse({
+        "labels": [method_labels.get(d["sale__payment_method"], d["sale__payment_method"]) for d in data],
+        "counts": [d["count"] for d in data],
+        "totals": [float(d["total"]) for d in data],
+    })
+
+@permission_required('yourapp.can_view_dashboard', login_url='/')
+def stock_consumption_data(request):
+    """
+    Consumption rate (avg units sold/day over trailing 30 days) per product,
+    plus estimated days until stockout at current rate.
+    """
+    days_window = 30
+    since = timezone.now() - timedelta(days=days_window)
+
+    consumption = (
+        SaleItem.objects
+        .filter(sale__created_at__gte=since)
+        .values('product_id')
+        .annotate(total_sold=Sum('quantity'))
+    )
+    consumption_map = {c['product_id']: c['total_sold'] for c in consumption}
+
+    products = Product.objects.select_related('feed_type', 'feed_type__animal', 'store', 'measure')
+
+    results = []
+    for p in products:
+        total_sold = consumption_map.get(p.id, 0)
+        daily_rate = float(total_sold) / days_window if total_sold else 0
+
+        if daily_rate > 0:
+            days_left = float(p.stock_quantity) / daily_rate
+        else:
+            days_left = None  # no recent sales — can't estimate
+
+        results.append({
+            "product": str(p),
+            "store": p.store.name,
+            "stock_quantity": float(p.stock_quantity),
+            "daily_consumption_rate": round(daily_rate, 2),
+            "days_until_stockout": round(days_left, 1) if days_left is not None else None,
+            "is_low_stock": p.is_low_stock,
+        })
+
+    # Sort so soonest stockouts appear first (None/no-data pushed to the end)
+    results.sort(key=lambda r: (r["days_until_stockout"] is None, r["days_until_stockout"]))
+
+    return JsonResponse({"results": results})
 
 
 @permission_required('yourapp.can_view_dashboard', login_url='/')
@@ -52,17 +138,37 @@ def dashboard(request):
 @permission_required('yourapp.can_view_dashboard', login_url='/')
 def dashboard_kpis(request):
     """Quick summary numbers shown as cards at the top of the dashboard."""
-    confirmed = Order.objects.filter(status=Order.Status.CONFIRMED)
+    sale_items = SaleItem.objects.select_related('product')
 
-    total_revenue = confirmed.aggregate(
-        total=Coalesce(Sum(F('quantity') * F('unit_price'), output_field=DECIMAL), 0, output_field=DECIMAL)
-    )['total']
+    totals = sale_items.aggregate(
+        total_sales=Coalesce(
+            Sum(F('quantity') * F('unit_price'), output_field=DECIMAL), 0, output_field=DECIMAL
+        ),
+        total_cost=Coalesce(
+            Sum(F('quantity') * F('product__cost'), output_field=DECIMAL), 0, output_field=DECIMAL
+        ),
+    )
+
+    total_sales = totals['total_sales']
+    total_cost = totals['total_cost']
+    profit = total_sales - total_cost
+
+    low_stock_feedtypes = (
+        Product.objects
+        .filter(stock_quantity__lte=F('reorder_level'))
+        .values('feed_type')
+        .distinct()
+        .count()
+    )
 
     return JsonResponse({
-        "total_revenue": float(total_revenue),
+        "total_sales": float(total_sales),
+        "total_cost": float(total_cost),
+        "profit": float(profit),
         "total_orders": Order.objects.count(),
         "pending_orders": Order.objects.filter(status=Order.Status.PENDING).count(),
-        "low_stock_products": Product.objects.filter(quantity__lte=5).count(),
+        "low_stock_products": Product.objects.filter(stock_quantity__lte=F('reorder_level')).count(),
+        "low_stock_feedtypes": low_stock_feedtypes,  # new
     })
 
 @permission_required('yourapp.can_view_dashboard', login_url='/')
@@ -215,7 +321,7 @@ def order_form(request):
 
             if quantity <= 0:
                 messages.error(request, "Quantity must be greater than 0.")
-            elif quantity > product.quantity:
+            elif quantity > product.stock_quantity:
                 messages.error(request, f"Only {product.quantity} available in stock.")
             else:
                 Order.objects.create(

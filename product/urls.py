@@ -5,6 +5,8 @@ from django.conf.urls.static import static
 
 
 urlpatterns = [
+    path('api/payment-status/', views.payment_status_data, name='payment_status_data'),
+    path('api/payment-method/', views.payment_method_data, name='payment_method_data'),
     path('api/model-summary/', views.model_summary_data, name='model_summary_data'),
     path("dashboard/", views.dashboard, name="dashboard"),
     path("api/dashboard-kpis/", views.dashboard_kpis, name="dashboard_kpis"),
@@ -12,6 +14,7 @@ urlpatterns = [
     path("api/top-products/", views.top_products_data, name="top_products_data"),
     path("api/orders-by-status/", views.orders_by_status_data, name="orders_by_status_data"),
     path("api/revenue-by-customer/", views.revenue_by_customer_data, name="revenue_by_customer_data"),
+    path("api/stock-consumption/", views.stock_consumption_data, name="stock_consumption_data"),
     path('review/', views.review_create, name='review_create'),
     path('register/', views.register_view, name='register'),
     path('login/', views.login_view, name='login'),

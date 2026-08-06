@@ -1,13 +1,16 @@
 <!-- dashboard.html -->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
     <style>
         :root {
@@ -25,9 +28,12 @@
             --text-faint: rgba(255, 255, 255, 0.38);
         }
 
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+        }
 
-        html, body {
+        html,
+        body {
             margin: 0;
             padding: 0;
             min-height: 100vh;
@@ -41,7 +47,9 @@
             background-attachment: fixed;
         }
 
-        h1, h2, h3 {
+        h1,
+        h2,
+        h3 {
             font-family: 'Sora', 'Inter', sans-serif;
             margin: 0;
         }
@@ -67,6 +75,37 @@
             border: 1px solid var(--glass-border);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
+        }
+
+        .topbar-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .topbar-links {
+            display: flex;
+            gap: 10px;
+        }
+
+        .topbar-link {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--accent-soft);
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.03);
+            transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .topbar-link:hover {
+            background: var(--glass-fill-hover);
+            color: var(--text-primary);
+            border-color: rgba(201, 160, 214, 0.35);
         }
 
         .topbar .eyebrow {
@@ -177,7 +216,7 @@
 
         .stats {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 16px;
         }
 
@@ -190,6 +229,19 @@
             padding: 16px 18px;
         }
 
+        .stat-card.highlight {
+            background: rgba(201, 146, 86, 0.14);
+            border-color: rgba(214, 179, 131, 0.4);
+        }
+
+        .stat-card.highlight .stat-label {
+            color: #d6b383;
+        }
+
+        .stat-card.highlight .stat-value {
+            color: #f0d9b3;
+        }
+
         .stat-card .stat-label {
             font-size: 12px;
             color: var(--text-faint);
@@ -200,6 +252,38 @@
             font-family: 'Sora', sans-serif;
             font-size: 22px;
             font-weight: 700;
+        }
+
+        .stat-card .stat-sub {
+            font-size: 11px;
+            color: var(--text-faint);
+            margin-top: 4px;
+        }
+
+        /* ---------- Compact payment cards ---------- */
+        .stat-card.compact {
+            padding: 8px 12px;
+        }
+
+        .stat-card.compact .stat-label {
+            font-size: 10.5px;
+            margin-bottom: 2px;
+        }
+
+        .stat-card.compact .stat-value {
+            font-size: 15px;
+        }
+
+        .stat-card.compact .stat-sub {
+            font-size: 9.5px;
+            margin-top: 1px;
+        }
+
+        #paymentStatusStats,
+        #paymentMethodStats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 8px;
         }
 
         /* ---------- Visual panel ---------- */
@@ -324,17 +408,90 @@
         }
 
         @media (max-width: 700px) {
-            .model-grid { grid-template-columns: 1fr 1fr; }
+            .model-grid {
+                grid-template-columns: 1fr 1fr;
+            }
         }
 
         @media (max-width: 980px) {
-            .shell { grid-template-columns: 1fr; }
-            .sidebar { position: static; }
-            .stats { grid-template-columns: 1fr 1fr; }
-            #overviewGrid { grid-template-columns: 1fr; }
+            .shell {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: static;
+            }
+
+            .stats {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            #overviewGrid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .stock-table-wrap {
+            height: 100%;
+            overflow-y: auto;
+            border-radius: 14px;
+        }
+
+        .stock-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .stock-table thead th {
+            text-align: left;
+            padding: 10px 14px;
+            font-size: 11px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--text-faint);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            background: rgba(31, 17, 48, 0.9);
+            backdrop-filter: blur(8px);
+        }
+
+        .stock-table tbody td {
+            padding: 11px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+        }
+
+        .stock-table tbody tr:hover {
+            background: var(--glass-fill-hover);
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .status-pill.ok {
+            background: rgba(146, 201, 156, 0.15);
+            color: #a0d6b3;
+        }
+
+        .status-pill.low {
+            background: rgba(201, 146, 86, 0.18);
+            color: #d6b383;
+        }
+
+        .status-pill.out {
+            background: rgba(201, 86, 86, 0.18);
+            color: #d68383;
         }
     </style>
 </head>
+
 <body>
 
     <div class="shell">
@@ -344,16 +501,26 @@
                 <div class="eyebrow">Feed Store</div>
                 <h1>Overview Dashboard</h1>
             </div>
-            <div class="note">Read-only snapshot. Manage stores, products, orders and users from the Django admin panel.</div>
+            <div class="topbar-right">
+                <div class="topbar-links">
+                    <a href="{% url 'index' %}" class="topbar-link">← Back to Site</a>
+                    <a href="/admin/" class="topbar-link">Django Admin</a>
+                </div>
+                <div class="note">Read-only snapshot. Manage stores, products, orders and users from the Django admin
+                    panel.</div>
+            </div>
         </div>
 
         <nav class="sidebar" id="sidebarNav">
             <div class="label">Activity</div>
             <button class="nav-item active" data-target="overview"><span class="dot"></span>Overview</button>
             <button class="nav-item" data-target="revenue"><span class="dot"></span>Revenue Trend</button>
+            <button class="nav-item" data-target="paymentStatus"><span class="dot"></span>Payment Status</button>
+            <button class="nav-item" data-target="paymentMethod"><span class="dot"></span>Payment Method</button>
             <button class="nav-item" data-target="products"><span class="dot"></span>Top Products</button>
             <button class="nav-item" data-target="status"><span class="dot"></span>Orders by Status</button>
             <button class="nav-item" data-target="customers"><span class="dot"></span>Top Customers</button>
+            <button class="nav-item" data-target="stock"><span class="dot"></span>Stock & Consumption</button>
             <button class="nav-item" data-target="models"><span class="dot"></span>Model Summary</button>
             <div class="foot-note">Select an item to focus its chart. Overview shows everything at a glance.</div>
         </nav>
@@ -361,23 +528,38 @@
         <div class="main">
 
             <div class="stats">
+                <div class="stat-card highlight" id="cardPendingOrders" style="cursor:pointer;">
+                    <div class="stat-label">Pending Orders</div>
+                    <div class="stat-value" id="statPendingOrders">—</div>
+                </div>
                 <div class="stat-card">
-                    <div class="stat-label">Total Revenue</div>
-                    <div class="stat-value" id="statRevenue">—</div>
+                    <div class="stat-label">Total Sales</div>
+                    <div class="stat-value" id="statTotalSales">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Cost</div>
+                    <div class="stat-value" id="statTotalCost">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Profit</div>
+                    <div class="stat-value" id="statProfit">—</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">Total Orders</div>
                     <div class="stat-value" id="statOrders">—</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Top Product Revenue</div>
-                    <div class="stat-value" id="statTopProduct">—</div>
-                </div>
-                <div class="stat-card">
                     <div class="stat-label">Active Customers</div>
                     <div class="stat-value" id="statCustomers">—</div>
                 </div>
+                <div class="stat-card highlight" id="cardLowStock" style="cursor:pointer;">
+                    <div class="stat-label">Products Low on Stock</div>
+                    <div class="stat-value" id="statLowStock">—</div>
+                </div>
             </div>
+
+            <div class="stats" id="paymentStatusStats"></div>
+            <div class="stats" id="paymentMethodStats"></div>
 
             <div class="panel">
                 <div class="panel-head">
@@ -385,11 +567,19 @@
                     <span id="panelSub">All charts</span>
                 </div>
 
-                <!-- Overview: compact grid of all four charts -->
+                <!-- Overview: compact grid of all charts -->
                 <div id="overviewGrid" class="active">
                     <div class="mini-card">
                         <h3>Revenue Trend</h3>
                         <div class="mini-chart"><canvas id="miniRevenue"></canvas></div>
+                    </div>
+                    <div class="mini-card">
+                        <h3>Payment Status</h3>
+                        <div class="mini-chart"><canvas id="miniPaymentStatus"></canvas></div>
+                    </div>
+                    <div class="mini-card">
+                        <h3>Payment Method</h3>
+                        <div class="mini-chart"><canvas id="miniPaymentMethod"></canvas></div>
                     </div>
                     <div class="mini-card">
                         <h3>Top Products</h3>
@@ -408,9 +598,28 @@
                 <!-- Focused single-chart views -->
                 <div class="chart-wrap">
                     <div class="chart-slot" id="slot-revenue"><canvas id="salesChart"></canvas></div>
+                    <div class="chart-slot" id="slot-paymentStatus"><canvas id="paymentStatusChart"></canvas></div>
+                    <div class="chart-slot" id="slot-paymentMethod"><canvas id="paymentMethodChart"></canvas></div>
                     <div class="chart-slot" id="slot-products"><canvas id="topProductsChart"></canvas></div>
                     <div class="chart-slot" id="slot-status"><canvas id="statusChart"></canvas></div>
                     <div class="chart-slot" id="slot-customers"><canvas id="customerChart"></canvas></div>
+                    <div class="chart-slot" id="slot-stock">
+                        <div class="stock-table-wrap">
+                            <table class="stock-table" id="stockTable">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Store</th>
+                                        <th>Stock</th>
+                                        <th>Daily Rate</th>
+                                        <th>Days Left</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stockTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
                     <div class="chart-slot" id="slot-models">
                         <div class="model-grid" id="modelGrid"></div>
                     </div>
@@ -512,21 +721,64 @@
             });
         }
 
+        function buildPieWithRevenue(ctx, data) {
+            return new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.counts,
+                        backgroundColor: ['#9256c9', '#c9a0d6', '#7a3fae', '#4a1f6b', '#b383bf', '#e6c9f0'],
+                        borderColor: 'rgba(18, 10, 31, 0.6)',
+                        borderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12 } },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const i = context.dataIndex;
+                                    const count = data.counts[i];
+                                    const total = fmtMoney(data.totals[i]);
+                                    return `${context.label}: ${count} sale${count === 1 ? '' : 's'} — ${total} RWF`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderPaymentStatCards(containerId, data) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            data.labels.forEach((label, i) => {
+                const card = document.createElement('div');
+                card.className = 'stat-card highlight compact';
+                card.innerHTML = `
+                    <div class="stat-label">${label}</div>
+                    <div class="stat-value">${data.counts[i]}</div>
+                    <div class="stat-sub">${fmtMoney(data.totals[i])} RWF</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
         // ---------- fetch + render ----------
         fetch("{% url 'sales_summary_data' %}").then(r => r.json()).then(data => {
             sourceData.revenue = data;
             chartInstances.revenueMain = buildLine(document.getElementById('salesChart'), data, false);
             chartInstances.revenueMini = buildLine(document.getElementById('miniRevenue'), data, true);
-            const total = (data.totals || []).reduce((a, b) => a + Number(b || 0), 0);
-            document.getElementById('statRevenue').textContent = fmtMoney(total);
         });
 
         fetch("{% url 'top_products_data' %}").then(r => r.json()).then(data => {
             sourceData.products = data;
             chartInstances.productsMain = buildBar(document.getElementById('topProductsChart'), data, false, false);
             chartInstances.productsMini = buildBar(document.getElementById('miniProducts'), data, true, false);
-            const top = Math.max(0, ...(data.totals || [0]));
-            document.getElementById('statTopProduct').textContent = fmtMoney(top);
         });
 
         fetch("{% url 'orders_by_status_data' %}").then(r => r.json()).then(data => {
@@ -537,11 +789,31 @@
             document.getElementById('statOrders').textContent = fmtMoney(totalOrders);
         });
 
+        fetch("{% url 'dashboard_kpis' %}").then(r => r.json()).then(data => {
+            document.getElementById('statTotalSales').textContent = fmtMoney(data.total_sales);
+            document.getElementById('statTotalCost').textContent = fmtMoney(data.total_cost);
+            document.getElementById('statProfit').textContent = fmtMoney(data.profit);
+            document.getElementById('statLowStock').textContent = data.low_stock_products;
+            document.getElementById('statPendingOrders').textContent = fmtMoney(data.pending_orders);
+        });
+
         fetch("{% url 'revenue_by_customer_data' %}").then(r => r.json()).then(data => {
             sourceData.customers = data;
             chartInstances.customersMain = buildBar(document.getElementById('customerChart'), data, false, true);
             chartInstances.customersMini = buildBar(document.getElementById('miniCustomers'), data, true, true);
             document.getElementById('statCustomers').textContent = (data.labels || []).length;
+        });
+
+        fetch("{% url 'payment_status_data' %}").then(r => r.json()).then(data => {
+            chartInstances.paymentStatusMain = buildPieWithRevenue(document.getElementById('paymentStatusChart'), data);
+            chartInstances.paymentStatusMini = buildPieWithRevenue(document.getElementById('miniPaymentStatus'), data);
+            renderPaymentStatCards('paymentStatusStats', data);
+        });
+
+        fetch("{% url 'payment_method_data' %}").then(r => r.json()).then(data => {
+            chartInstances.paymentMethodMain = buildPieWithRevenue(document.getElementById('paymentMethodChart'), data);
+            chartInstances.paymentMethodMini = buildPieWithRevenue(document.getElementById('miniPaymentMethod'), data);
+            renderPaymentStatCards('paymentMethodStats', data);
         });
 
         // ---------- model summary (counts per model) ----------
@@ -562,33 +834,73 @@
                 '<div class="model-tile"><div class="model-name">Model summary endpoint not found</div></div>';
         });
 
+        fetch("{% url 'stock_consumption_data' %}").then(r => r.json()).then(data => {
+            const tbody = document.getElementById('stockTableBody');
+            tbody.innerHTML = '';
+            (data.results || []).forEach(row => {
+                let statusClass = 'ok', statusText = 'OK';
+                if (row.stock_quantity <= 0) {
+                    statusClass = 'out'; statusText = 'Out of Stock';
+                } else if (row.is_low_stock) {
+                    statusClass = 'low'; statusText = 'Low Stock';
+                }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.product}</td>
+                    <td>${row.store}</td>
+                    <td>${row.stock_quantity}</td>
+                    <td>${row.daily_consumption_rate}</td>
+                    <td>${row.days_until_stockout ?? '—'}</td>
+                    <td><span class="status-pill ${statusClass}">${statusText}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }).catch(() => {
+            document.getElementById('stockTableBody').innerHTML =
+                '<tr><td colspan="6">Stock data unavailable.</td></tr>';
+        });
+
         // ---------- left-nav switching ----------
         const titles = {
             overview: ['Overview', 'All charts'],
             revenue: ['Revenue Trend', 'Confirmed orders over time'],
+            paymentStatus: ['Payment Status', 'Paid / Unpaid / Prepaid breakdown'],
+            paymentMethod: ['Payment Method', 'Cash / Mobile Money / Bank / Card / Other'],
             products: ['Top Products', 'Ranked by revenue'],
             status: ['Orders by Status', 'Share of all orders'],
             customers: ['Top Customers', 'Ranked by revenue'],
+            stock: ['Stock & Consumption', 'Daily usage & estimated stockout'],
             models: ['Model Summary', 'Record counts across all models'],
         };
 
+        function switchPanel(target) {
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+            const navBtn = document.querySelector(`.nav-item[data-target="${target}"]`);
+            if (navBtn) navBtn.classList.add('active');
+
+            document.getElementById('panelTitle').textContent = titles[target][0];
+            document.getElementById('panelSub').textContent = titles[target][1];
+
+            document.getElementById('overviewGrid').classList.toggle('active', target === 'overview');
+            document.querySelectorAll('.chart-slot').forEach(slot => slot.classList.remove('active'));
+            if (target !== 'overview') {
+                document.getElementById('slot-' + target).classList.add('active');
+            }
+        }
+
         document.querySelectorAll('.nav-item').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
+            btn.addEventListener('click', () => switchPanel(btn.dataset.target));
+        });
 
-                const target = btn.dataset.target;
-                document.getElementById('panelTitle').textContent = titles[target][0];
-                document.getElementById('panelSub').textContent = titles[target][1];
+        // ---------- KPI card shortcuts ----------
+        document.getElementById('cardLowStock').addEventListener('click', () => switchPanel('stock'));
 
-                document.getElementById('overviewGrid').classList.toggle('active', target === 'overview');
-                document.querySelectorAll('.chart-slot').forEach(slot => slot.classList.remove('active'));
-                if (target !== 'overview') {
-                    document.getElementById('slot-' + target).classList.add('active');
-                }
-            });
+        document.getElementById('cardPendingOrders').addEventListener('click', () => {
+            window.location.href = '/admin/product/order/?status__exact=pending';
         });
     </script>
 
 </body>
+
 </html>

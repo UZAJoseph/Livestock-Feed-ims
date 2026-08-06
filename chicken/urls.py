@@ -17,9 +17,15 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
+from django.shortcuts import redirect
 from django.conf.urls.static import static
 
+
+def admin_login_redirect(request):
+    return redirect('index')
+
 urlpatterns = [
+    path('admin/login/', admin_login_redirect),
     path('', include('product.urls')),
     path('admin/', admin.site.urls),
 ]

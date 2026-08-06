@@ -112,7 +112,12 @@ class Product(models.Model):
     measure = models.ForeignKey(Measure, on_delete=models.PROTECT, related_name='products')
     cost = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     default_price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
-    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)])
+    stock_quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)])  # renamed from `quantity`
+    reorder_level = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0,
+        validators=[MinValueValidator(0)],
+        help_text="Alert when stock falls to or below this level"
+    )
 
     class Meta:
         unique_together = ('store', 'feed_type', 'amount', 'measure')
@@ -120,6 +125,70 @@ class Product(models.Model):
     def __str__(self):
         return f"{self.store.name} - {self.feed_type} - {self.amount}{self.measure.abbreviation or self.measure.name} - {self.default_price}"
 
+    @property
+    def stock_label(self):
+        """e.g. '40 bags in stock' or '15 tons in stock'."""
+        unit = self.measure.abbreviation or self.measure.name
+        return f"{self.stock_quantity} {unit} in stock"
+
+    @property
+    def is_low_stock(self):
+        return self.stock_quantity <= self.reorder_level
+
+    @property
+    def is_out_of_stock(self):
+        return self.stock_quantity <= 0
+
+    @property
+    def stock_value(self):
+        """Current stock valued at cost price."""
+        return self.stock_quantity * self.cost
+
+
+class Restock(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='restocks')
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0.01)])
+    cost_per_unit = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    restocked_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name='restocks_made',
+    )
+    note = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Restock: {self.product} +{self.quantity} on {self.created_at:%Y-%m-%d}"
+
+    @property
+    def total_cost(self):
+        return self.quantity * self.cost_per_unit
+
+    def save(self, *args, **kwargs):
+        is_new = self._state.adding
+
+        with transaction.atomic():
+            product = Product.objects.select_for_update().get(pk=self.product_id)
+
+            super().save(*args, **kwargs)
+
+            if is_new:
+                old_qty = product.stock_quantity
+                old_cost = product.cost
+
+                new_qty = old_qty + self.quantity
+
+                # Weighted average cost across old stock + incoming stock
+                if new_qty > 0:
+                    product.cost = (
+                        (old_qty * old_cost) + (self.quantity * self.cost_per_unit)
+                    ) / new_qty
+
+                product.stock_quantity = new_qty
+                product.save(update_fields=['stock_quantity', 'cost'])
 
 class PaymentStatus(models.TextChoices):
     PAID = 'paid', 'Paid'
@@ -140,6 +209,7 @@ class Order(models.Model):
         ordering = ['-created_at']  # keep whatever you already have here
         permissions = [
             ("can_view_dashboard", "Can view dashboard"),
+            ("can_view_admin_panel", "Can view admin panel link"), 
         ]
 
     class Status(models.TextChoices):

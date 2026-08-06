@@ -44,23 +44,24 @@
                     <select id="products-data" style="display:none">
                         {% for product in products %}
                         <option value="{{ product.id }}" data-animal-id="{{ product.feed_type.animal.id }}"
-        data-animal-name="{{ product.feed_type.animal.name }}"
-        data-feedtype-id="{{ product.feed_type.id }}"
-        data-feedtype-name="{{ product.feed_type.name }}"
-        data-price="{{ product.default_price }}"
-        data-quantity="{{ product.quantity }}"
-        data-label="{{ product.amount }}{{ product.measure.abbreviation }} - {{ product.default_price }} RWF">
-    </option>
+                            data-animal-name="{{ product.feed_type.animal.name }}"
+                            data-feedtype-id="{{ product.feed_type.id }}"
+                            data-feedtype-name="{{ product.feed_type.name }}" data-price="{{ product.default_price }}"
+                            data-quantity="{{ product.stock_quantity }}" data-amount="{{ product.amount }}"
+                            data-measure-name="{{ product.measure.name }}"
+                            data-measure-abbr="{{ product.measure.abbreviation }}"
+                            data-label="{{ product.amount }}{{ product.measure.abbreviation }} - {{ product.default_price }} RWF">
+                        </option>
                         {% endfor %}
                     </select>
 
                     <div class="row g-2 mb-3">
                         <div class="col-6">
-                            <label class="form-label">Unit Price Per kg</label>
+                            <label class="form-label" id="unitPriceLabel">Unit Price</label>
                             <input type="text" id="id_unit_price" class="form-control" readonly>
                         </div>
                         <div class="col-6">
-                            <label class="form-label">Quantity</label>
+                            <label class="form-label" id="quantityLabel">Quantity</label>
                             <input type="number" step="0.01" min="0.01" name="quantity" id="id_quantity"
                                 class="form-control" required>
                         </div>
@@ -184,170 +185,176 @@
             </style>
 
             <script>
-document.addEventListener('DOMContentLoaded', function () {
+                document.addEventListener('DOMContentLoaded', function () {
 
-    const dataSelect = document.getElementById('products-data');
-    const productOptions = Array.from(dataSelect.options);
+                    const dataSelect = document.getElementById('products-data');
+                    const productOptions = Array.from(dataSelect.options);
 
-    const animalSelect = document.getElementById('id_animal');
-    const feedTypeSelect = document.getElementById('id_feed_type');
-    const productSelect = document.getElementById('id_product');
+                    const animalSelect = document.getElementById('id_animal');
+                    const feedTypeSelect = document.getElementById('id_feed_type');
+                    const productSelect = document.getElementById('id_product');
 
-    const quantityInput = document.getElementById('id_quantity');
-    const unitPriceField = document.getElementById('id_unit_price');
-    const totalPriceField = document.getElementById('id_total_price');
-
-
-    // -------------------------
-    // Load animals
-    // -------------------------
-    const animals = [];
-
-    productOptions.forEach(product => {
-        const animalId = product.dataset.animalId;
-        const animalName = product.dataset.animalName;
-
-        if (!animals.find(a => a.id === animalId)) {
-            animals.push({
-                id: animalId,
-                name: animalName
-            });
-        }
-    });
+                    const quantityInput = document.getElementById('id_quantity');
+                    const unitPriceField = document.getElementById('id_unit_price');
+                    const totalPriceField = document.getElementById('id_total_price');
 
 
-    animals.forEach(animal => {
-        const option = document.createElement('option');
-        option.value = animal.id;
-        option.textContent = animal.name;
-        animalSelect.appendChild(option);
-    });
+                    // -------------------------
+                    // Load animals
+                    // -------------------------
+                    const animals = [];
+
+                    productOptions.forEach(product => {
+                        const animalId = product.dataset.animalId;
+                        const animalName = product.dataset.animalName;
+
+                        if (!animals.find(a => a.id === animalId)) {
+                            animals.push({
+                                id: animalId,
+                                name: animalName
+                            });
+                        }
+                    });
 
 
-    // -------------------------
-    // Animal changed
-    // -------------------------
-    animalSelect.addEventListener('change', function () {
-    const animalId = this.value;
-
-    feedTypeSelect.innerHTML = '<option value="">-- Select feed type --</option>';
-    productSelect.innerHTML = '<option value="">-- Select a package --</option>';
-    feedTypeSelect.disabled = true;
-    productSelect.disabled = true;
-    unitPriceField.value = '';
-    totalPriceField.value = '';
-
-    if (!animalId) return;
-
-    const feedTypes = [];
-
-    productOptions.forEach(product => {
-        if (product.dataset.animalId == animalId) {
-            const feedId = product.dataset.feedtypeId;
-            const feedName = product.dataset.feedtypeName;
-            const inStock = Number(product.dataset.quantity) > 0;
-
-            let feed = feedTypes.find(f => f.id == feedId);
-            if (!feed) {
-                feed = { id: feedId, name: feedName, hasStock: inStock };
-                feedTypes.push(feed);
-            } else if (inStock) {
-                feed.hasStock = true; // any in-stock product upgrades the whole feed type
-            }
-        }
-    });
-
-    feedTypes.forEach(feed => {
-        const option = document.createElement('option');
-        option.value = feed.id;
-        option.textContent = feed.hasStock ? feed.name : `${feed.name} (Out of stock)`;
-        if (!feed.hasStock) {
-            option.disabled = true;
-            option.style.color = 'rgba(255,255,255,0.4)';
-        }
-        feedTypeSelect.appendChild(option);
-    });
-
-    if (feedTypes.length > 0) {
-        feedTypeSelect.disabled = false;
-    }
-});
+                    animals.forEach(animal => {
+                        const option = document.createElement('option');
+                        option.value = animal.id;
+                        option.textContent = animal.name;
+                        animalSelect.appendChild(option);
+                    });
 
 
+                    // -------------------------
+                    // Animal changed
+                    // -------------------------
+                    animalSelect.addEventListener('change', function () {
+                        const animalId = this.value;
 
-    // -------------------------
-    // Feed type changed
-    // -------------------------
-   feedTypeSelect.addEventListener('change', function () {
-    const feedTypeId = this.value;
+                        feedTypeSelect.innerHTML = '<option value="">-- Select feed type --</option>';
+                        productSelect.innerHTML = '<option value="">-- Select a package --</option>';
+                        feedTypeSelect.disabled = true;
+                        productSelect.disabled = true;
+                        unitPriceField.value = '';
+                        totalPriceField.value = '';
 
-    productSelect.innerHTML = '<option value="">-- Select a package --</option>';
-    productSelect.disabled = true;
-    unitPriceField.value = '';
-    totalPriceField.value = '';
+                        if (!animalId) return;
 
-    if (!feedTypeId) return;
+                        const feedTypes = [];
 
-    productOptions.forEach(product => {
-        if (product.dataset.feedtypeId == feedTypeId) {
-            const inStock = Number(product.dataset.quantity) > 0;
+                        productOptions.forEach(product => {
+                            if (product.dataset.animalId == animalId) {
+                                const feedId = product.dataset.feedtypeId;
+                                const feedName = product.dataset.feedtypeName;
+                                const inStock = Number(product.dataset.quantity) > 0;
 
-            const option = document.createElement('option');
-            option.value = product.value;
-            option.textContent = inStock
-                ? product.dataset.label
-                : `${product.dataset.label} (Out of stock)`;
-            option.dataset.price = product.dataset.price;
+                                let feed = feedTypes.find(f => f.id == feedId);
+                                if (!feed) {
+                                    feed = { id: feedId, name: feedName, hasStock: inStock };
+                                    feedTypes.push(feed);
+                                } else if (inStock) {
+                                    feed.hasStock = true; // any in-stock product upgrades the whole feed type
+                                }
+                            }
+                        });
 
-            if (!inStock) {
-                option.disabled = true;
-                option.style.color = 'rgba(255,255,255,0.4)';
-            }
+                        feedTypes.forEach(feed => {
+                            const option = document.createElement('option');
+                            option.value = feed.id;
+                            option.textContent = feed.hasStock ? feed.name : `${feed.name} (Out of stock)`;
+                            if (!feed.hasStock) {
+                                option.disabled = true;
+                                option.style.color = 'rgba(255,255,255,0.4)';
+                            }
+                            feedTypeSelect.appendChild(option);
+                        });
 
-            productSelect.appendChild(option);
-        }
-    });
-
-    if (productSelect.options.length > 1) {
-        productSelect.disabled = false;
-    }
-});
-
-
-    // -------------------------
-    // Price calculation
-    // -------------------------
-    function updatePrices() {
-
-        const selected =
-            productSelect.options[productSelect.selectedIndex];
-
-
-        const price =
-            Number(selected?.dataset.price || 0);
+                        if (feedTypes.length > 0) {
+                            feedTypeSelect.disabled = false;
+                        }
+                    });
 
 
-        const quantity =
-            Number(quantityInput.value || 0);
+
+                    // -------------------------
+                    // Feed type changed
+                    // -------------------------
+                    feedTypeSelect.addEventListener('change', function () {
+                        const feedTypeId = this.value;
+
+                        productSelect.innerHTML = '<option value="">-- Select a package --</option>';
+                        productSelect.disabled = true;
+                        unitPriceField.value = '';
+                        totalPriceField.value = '';
+
+                        if (!feedTypeId) return;
+
+                        productOptions.forEach(product => {
+                            if (product.dataset.feedtypeId == feedTypeId) {
+                                const inStock = Number(product.dataset.quantity) > 0;
+
+                                const option = document.createElement('option');
+                                option.value = product.value;
+                                option.textContent = inStock
+                                    ? product.dataset.label
+                                    : `${product.dataset.label} (Out of stock)`;
+                                option.dataset.price = product.dataset.price;
+
+                                if (!inStock) {
+                                    option.disabled = true;
+                                    option.style.color = 'rgba(255,255,255,0.4)';
+                                }
+
+                                productSelect.appendChild(option);
+                            }
+                        });
+
+                        if (productSelect.options.length > 1) {
+                            productSelect.disabled = false;
+                        }
+                    });
 
 
-        unitPriceField.value =
-            price.toFixed(2);
+                    // -------------------------
+                    // Price calculation
+                    // -------------------------
+                    function updatePrices() {
+                        const selected = productSelect.options[productSelect.selectedIndex];
+
+                        const price = Number(selected?.dataset.price || 0);
+                        const measureName = selected?.dataset.measureName || '';
+                        const measureAbbr = selected?.dataset.measureAbbr || '';
+                        const packageAmount = selected?.dataset.amount || '';
+
+                        const quantity = Number(quantityInput.value || 0);
+
+                        unitPriceField.value = price.toFixed(2);
+                        totalPriceField.value = (price * quantity).toFixed(2);
+
+                        const totalPhysical = (Number(packageAmount) * quantity).toFixed(2);
+                        document.getElementById('totalPhysicalHelper').textContent =
+                            quantity > 0 ? `= ${totalPhysical}${measureAbbr} total` : '';
+
+                        // dynamic labels
+                        document.getElementById('unitPriceLabel').textContent =
+                            selected && selected.value
+                                ? `Price per ${packageAmount}${measureAbbr} ${measureName}`
+                                : 'Unit Price';
+
+                        document.getElementById('quantityLabel').textContent =
+                            selected && selected.value
+                                ? `Quantity (in ${measureName || 'units'})`
+                                : 'Quantity';
+                    }
 
 
-        totalPriceField.value =
-            (price * quantity).toFixed(2);
+                    productSelect.addEventListener('change', updatePrices);
 
-    }
-
-
-    productSelect.addEventListener('change', updatePrices);
-
-    quantityInput.addEventListener('input', updatePrices);
+                    quantityInput.addEventListener('input', updatePrices);
 
 
-});
-</script>
+                });
+            </script>
 
             <!-- Modal footer -->
             <div class="modal-footer">
