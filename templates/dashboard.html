@@ -497,14 +497,14 @@
         <div class="main">
 
             <div class="stats">
-                <div class="stat-card highlight">
+                <div class="stat-card highlight" id="cardPendingOrders" style="cursor:pointer;">
                     <div class="stat-label">Pending Orders</div>
                     <div class="stat-value" id="statPendingOrders">—</div>
                 </div>
-                <div class="stat-card highlight">
+                <!-- <div class="stat-card highlight">
                     <div class="stat-label">Feed Types Low on Stock</div>
                     <div class="stat-value" id="statLowStockFeedTypes">—</div>
-                </div>
+                </div> -->
                 <div class="stat-card">
                     <div class="stat-label">Total Sales</div>
                     <div class="stat-value" id="statTotalSales">—</div>
@@ -525,7 +525,7 @@
                     <div class="stat-label">Active Customers</div>
                     <div class="stat-value" id="statCustomers">—</div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card highlight" id="cardLowStock" style="cursor:pointer;">
                     <div class="stat-label">Products Low on Stock</div>
                     <div class="stat-value" id="statLowStock">—</div>
                 </div>
@@ -767,6 +767,7 @@
 
 
         // ---------- left-nav switching ----------
+        // ---------- left-nav switching ----------
         const titles = {
             overview: ['Overview', 'All charts'],
             revenue: ['Revenue Trend', 'Confirmed orders over time'],
@@ -777,21 +778,30 @@
             models: ['Model Summary', 'Record counts across all models'],
         };
 
+        function switchPanel(target) {
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+            const navBtn = document.querySelector(`.nav-item[data-target="${target}"]`);
+            if (navBtn) navBtn.classList.add('active');
+
+            document.getElementById('panelTitle').textContent = titles[target][0];
+            document.getElementById('panelSub').textContent = titles[target][1];
+
+            document.getElementById('overviewGrid').classList.toggle('active', target === 'overview');
+            document.querySelectorAll('.chart-slot').forEach(slot => slot.classList.remove('active'));
+            if (target !== 'overview') {
+                document.getElementById('slot-' + target).classList.add('active');
+            }
+        }
+
         document.querySelectorAll('.nav-item').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
+            btn.addEventListener('click', () => switchPanel(btn.dataset.target));
+        });
 
-                const target = btn.dataset.target;
-                document.getElementById('panelTitle').textContent = titles[target][0];
-                document.getElementById('panelSub').textContent = titles[target][1];
+        // ---------- KPI card shortcuts ----------
+        document.getElementById('cardLowStock').addEventListener('click', () => switchPanel('stock'));
 
-                document.getElementById('overviewGrid').classList.toggle('active', target === 'overview');
-                document.querySelectorAll('.chart-slot').forEach(slot => slot.classList.remove('active'));
-                if (target !== 'overview') {
-                    document.getElementById('slot-' + target).classList.add('active');
-                }
-            });
+        document.getElementById('cardPendingOrders').addEventListener('click', () => {
+            window.location.href = '/admin/product/order/?status__exact=pending';
         });
     </script>
 
