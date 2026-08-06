@@ -8,6 +8,7 @@ from django import forms
 from django.utils.html import format_html
 from django.core.exceptions import ValidationError
 from .models import District, Sector, Store, Store, FeedType, Animal, Measure, Product, Order, Sale, SaleItem, PaymentMethod, PaymentStatus
+from unfold.admin import ModelAdmin
 
 
 # Register your models here.
