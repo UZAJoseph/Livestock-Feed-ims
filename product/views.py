@@ -17,9 +17,50 @@ from django.db.models import Sum, Count, F, DecimalField, ExpressionWrapper
 from django.db.models.functions import TruncDate, Coalesce
 from django.http import JsonResponse
 from django.shortcuts import render
-from .models import Order, Product
+from .models import Order, Product, PaymentMethod, PaymentStatus
 
 
+
+
+
+@permission_required('yourapp.can_view_dashboard', login_url='/')
+def payment_status_data(request):
+    status_labels = dict(PaymentStatus.choices)
+    data = (
+        SaleItem.objects
+        .values('sale__payment_status')
+        .annotate(
+            count=Count('sale', distinct=True),
+            total=Coalesce(
+                Sum(F('quantity') * F('unit_price'), output_field=DECIMAL), 0, output_field=DECIMAL
+            ),
+        )
+    )
+    return JsonResponse({
+        "labels": [status_labels.get(d["sale__payment_status"], d["sale__payment_status"]) for d in data],
+        "counts": [d["count"] for d in data],
+        "totals": [float(d["total"]) for d in data],
+    })
+
+
+@permission_required('yourapp.can_view_dashboard', login_url='/')
+def payment_method_data(request):
+    method_labels = dict(PaymentMethod.choices)
+    data = (
+        SaleItem.objects
+        .values('sale__payment_method')
+        .annotate(
+            count=Count('sale', distinct=True),
+            total=Coalesce(
+                Sum(F('quantity') * F('unit_price'), output_field=DECIMAL), 0, output_field=DECIMAL
+            ),
+        )
+    )
+    return JsonResponse({
+        "labels": [method_labels.get(d["sale__payment_method"], d["sale__payment_method"]) for d in data],
+        "counts": [d["count"] for d in data],
+        "totals": [float(d["total"]) for d in data],
+    })
 
 @permission_required('yourapp.can_view_dashboard', login_url='/')
 def stock_consumption_data(request):

@@ -501,10 +501,7 @@
                     <div class="stat-label">Pending Orders</div>
                     <div class="stat-value" id="statPendingOrders">—</div>
                 </div>
-                <!-- <div class="stat-card highlight">
-                    <div class="stat-label">Feed Types Low on Stock</div>
-                    <div class="stat-value" id="statLowStockFeedTypes">—</div>
-                </div> -->
+
                 <div class="stat-card">
                     <div class="stat-label">Total Sales</div>
                     <div class="stat-value" id="statTotalSales">—</div>
@@ -544,6 +541,14 @@
                         <div class="mini-chart"><canvas id="miniRevenue"></canvas></div>
                     </div>
                     <div class="mini-card">
+                        <h3>Payment Status</h3>
+                        <div class="mini-chart"><canvas id="miniPaymentStatus"></canvas></div>
+                    </div>
+                    <div class="mini-card">
+                        <h3>Payment Method</h3>
+                        <div class="mini-chart"><canvas id="miniPaymentMethod"></canvas></div>
+                    </div>
+                    <div class="mini-card">
                         <h3>Top Products</h3>
                         <div class="mini-chart"><canvas id="miniProducts"></canvas></div>
                     </div>
@@ -560,6 +565,8 @@
                 <!-- Focused single-chart views -->
                 <div class="chart-wrap">
                     <div class="chart-slot" id="slot-revenue"><canvas id="salesChart"></canvas></div>
+                    <div class="chart-slot" id="slot-paymentStatus"><canvas id="paymentStatusChart"></canvas></div>
+                    <div class="chart-slot" id="slot-paymentMethod"><canvas id="paymentMethodChart"></canvas></div>
                     <div class="chart-slot" id="slot-products"><canvas id="topProductsChart"></canvas></div>
                     <div class="chart-slot" id="slot-status"><canvas id="statusChart"></canvas></div>
                     <div class="chart-slot" id="slot-customers"><canvas id="customerChart"></canvas></div>
@@ -682,6 +689,38 @@
             });
         }
 
+        function buildPieWithRevenue(ctx, data) {
+            return new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.counts,
+                        backgroundColor: ['#9256c9', '#c9a0d6', '#7a3fae', '#4a1f6b', '#b383bf', '#e6c9f0'],
+                        borderColor: 'rgba(18, 10, 31, 0.6)',
+                        borderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12 } },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const i = context.dataIndex;
+                                    const count = data.counts[i];
+                                    const total = fmtMoney(data.totals[i]);
+                                    return `${context.label}: ${count} sale${count === 1 ? '' : 's'} — ${total} RWF`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
         // ---------- fetch + render ----------
         fetch("{% url 'sales_summary_data' %}").then(r => r.json()).then(data => {
             sourceData.revenue = data;
@@ -719,6 +758,16 @@
             document.getElementById('statCustomers').textContent = (data.labels || []).length;
         });
 
+        fetch("{% url 'payment_status_data' %}").then(r => r.json()).then(data => {
+            chartInstances.paymentStatusMain = buildPieWithRevenue(document.getElementById('paymentStatusChart'), data);
+            chartInstances.paymentStatusMini = buildPieWithRevenue(document.getElementById('miniPaymentStatus'), data);
+        });
+
+        fetch("{% url 'payment_method_data' %}").then(r => r.json()).then(data => {
+            chartInstances.paymentMethodMain = buildPieWithRevenue(document.getElementById('paymentMethodChart'), data);
+            chartInstances.paymentMethodMini = buildPieWithRevenue(document.getElementById('miniPaymentMethod'), data);
+        });
+
         // ---------- model summary (counts per model) ----------
         fetch("{% url 'model_summary_data' %}").then(r => r.json()).then(data => {
             const grid = document.getElementById('modelGrid');
@@ -737,7 +786,13 @@
                 '<div class="model-tile"><div class="model-name">Model summary endpoint not found</div></div>';
         });
 
+        fetch("{% url 'payment_status_data' %}").then(r => r.json()).then(data => {
+            chartInstances.paymentStatusMain = buildPie(document.getElementById('paymentStatusChart'), data);
+        });
 
+        fetch("{% url 'payment_method_data' %}").then(r => r.json()).then(data => {
+            chartInstances.paymentMethodMain = buildPie(document.getElementById('paymentMethodChart'), data);
+        });
         fetch("{% url 'stock_consumption_data' %}").then(r => r.json()).then(data => {
             const tbody = document.getElementById('stockTableBody');
             tbody.innerHTML = '';
@@ -769,6 +824,8 @@
         // ---------- left-nav switching ----------
         // ---------- left-nav switching ----------
         const titles = {
+            paymentStatus: ['Payment Status', 'Paid / Unpaid / Prepaid breakdown'],
+            paymentMethod: ['Payment Method', 'Cash / Mobile Money / Bank / Card / Other'],
             overview: ['Overview', 'All charts'],
             revenue: ['Revenue Trend', 'Confirmed orders over time'],
             products: ['Top Products', 'Ranked by revenue'],

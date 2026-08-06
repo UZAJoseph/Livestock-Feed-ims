@@ -3,6 +3,8 @@ from . import views
 
 
 urlpatterns = [
+    path('api/payment-status/', views.payment_status_data, name='payment_status_data'),
+    path('api/payment-method/', views.payment_method_data, name='payment_method_data'),
     path('api/model-summary/', views.model_summary_data, name='model_summary_data'),
     path("dashboard/", views.dashboard, name="dashboard"),
     path("api/dashboard-kpis/", views.dashboard_kpis, name="dashboard_kpis"),
