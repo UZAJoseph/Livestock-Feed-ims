@@ -270,8 +270,8 @@ def login_view(request):
             auth_login(request, user)
             messages.success(request, f"Welcome back, {user.first_name}!")
 
-            if user.is_staff:
-                return redirect('/admin/')
+            # if user.is_staff:
+            #     return redirect('/admin/')
 
             if request.POST.get('next') == 'order':
                 request.session['open_order_modal'] = True
