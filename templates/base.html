@@ -194,7 +194,13 @@
                                 data-bs-target="#authModal">Order Now</a>
                             {% endif %}
                         </li>
-                        
+
+                        {% if user.is_authenticated and perms.yourapp.can_view_dashboard %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+                        </li>
+                        {% endif %}
+
                         {% if user.is_authenticated %}
                         <li class="nav-item">
                             <span class="nav-link">Welcome, {{ user.first_name|default:user.username }}</span>
@@ -316,34 +322,35 @@
         </div>
 
         <section id="reviews" class="mixcolor2">
-    <div class="row pt-3">
-        <div class="col-12 text-center">
-            <h4>What Our Clients Say</h4>
-        </div>
-    </div>
-    <div class="row pt-3">
-        {% for review in reviews %}
-        <div class="col-md-4">
-            <div class="card glass-card m-2">
-                <div class="card-body">
-                    <h6 class="card-title">{{ review.user.first_name|default:review.user.username }}</h6>
-                    <p class="mb-1" style="color: rgba(255,255,255,0.6); font-size: 0.85rem;">{{ review.feed_type.name }}</p>
-                    <p class="card-text">{{ review.comment }}</p>
+            <div class="row pt-3">
+                <div class="col-12 text-center">
+                    <h4>What Our Clients Say</h4>
                 </div>
             </div>
-        </div>
-        {% empty %}
-        <div class="col-12 text-center">No reviews yet.</div>
-        {% endfor %}
-    </div>
-    {% if user.is_authenticated %}
-    <div class="row pt-2 pb-3">
-        <div class="col-12 text-center">
-            <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reviewModal">Leave a Review</a>
-        </div>
-    </div>
-    {% endif %}
-</section>
+            <div class="row pt-3">
+                {% for review in reviews %}
+                <div class="col-md-4">
+                    <div class="card glass-card m-2">
+                        <div class="card-body">
+                            <h6 class="card-title text-dark">{{ review.user.first_name|default:review.user.username }}</h6>
+                            
+                            <p class="card-text">{{ review.comment }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center">No reviews yet.</div>
+                {% endfor %}
+            </div>
+            {% if user.is_authenticated %}
+            <div class="row pt-2 pb-3">
+                <div class="col-12 text-center">
+                    <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reviewModal">Leave a
+                        Review</a>
+                </div>
+            </div>
+            {% endif %}
+        </section>
 
         <section id="aboutUs">
             <div class="row bg-info1">

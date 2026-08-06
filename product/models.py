@@ -13,7 +13,13 @@ from django.contrib.auth.models import User
 
 class Review(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
-    feed_type = models.ForeignKey('FeedType', on_delete=models.CASCADE, related_name='reviews')
+    feed_type = models.ForeignKey(
+        'FeedType',
+        on_delete=models.SET_NULL,
+        related_name='reviews',
+        null=True,
+        blank=True,
+    )
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -21,7 +27,8 @@ class Review(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.user.username} on {self.feed_type.name}"
+        target = self.feed_type.name if self.feed_type else "general feedback"
+        return f"{self.user.username} on {target}"
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
@@ -129,6 +136,12 @@ class PaymentMethod(models.TextChoices):
 
 class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders' )
+    class Meta:
+        ordering = ['-created_at']  # keep whatever you already have here
+        permissions = [
+            ("can_view_dashboard", "Can view dashboard"),
+        ]
+
     class Status(models.TextChoices):
         PENDING = 'pending', 'Pending'
         CONFIRMED = 'confirmed', 'Confirmed'
