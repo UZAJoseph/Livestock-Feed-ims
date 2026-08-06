@@ -217,7 +217,6 @@
         .stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            /* ← changed */
             gap: 16px;
         }
 
@@ -229,7 +228,6 @@
             -webkit-backdrop-filter: blur(16px);
             padding: 16px 18px;
         }
-
 
         .stat-card.highlight {
             background: rgba(201, 146, 86, 0.14);
@@ -254,6 +252,38 @@
             font-family: 'Sora', sans-serif;
             font-size: 22px;
             font-weight: 700;
+        }
+
+        .stat-card .stat-sub {
+            font-size: 11px;
+            color: var(--text-faint);
+            margin-top: 4px;
+        }
+
+        /* ---------- Compact payment cards ---------- */
+        .stat-card.compact {
+            padding: 8px 12px;
+        }
+
+        .stat-card.compact .stat-label {
+            font-size: 10.5px;
+            margin-bottom: 2px;
+        }
+
+        .stat-card.compact .stat-value {
+            font-size: 15px;
+        }
+
+        .stat-card.compact .stat-sub {
+            font-size: 9.5px;
+            margin-top: 1px;
+        }
+
+        #paymentStatusStats,
+        #paymentMethodStats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 8px;
         }
 
         /* ---------- Visual panel ---------- */
@@ -401,7 +431,6 @@
             }
         }
 
-        /* need add lates */
         .stock-table-wrap {
             height: 100%;
             overflow-y: auto;
@@ -486,6 +515,8 @@
             <div class="label">Activity</div>
             <button class="nav-item active" data-target="overview"><span class="dot"></span>Overview</button>
             <button class="nav-item" data-target="revenue"><span class="dot"></span>Revenue Trend</button>
+            <button class="nav-item" data-target="paymentStatus"><span class="dot"></span>Payment Status</button>
+            <button class="nav-item" data-target="paymentMethod"><span class="dot"></span>Payment Method</button>
             <button class="nav-item" data-target="products"><span class="dot"></span>Top Products</button>
             <button class="nav-item" data-target="status"><span class="dot"></span>Orders by Status</button>
             <button class="nav-item" data-target="customers"><span class="dot"></span>Top Customers</button>
@@ -501,7 +532,6 @@
                     <div class="stat-label">Pending Orders</div>
                     <div class="stat-value" id="statPendingOrders">—</div>
                 </div>
-
                 <div class="stat-card">
                     <div class="stat-label">Total Sales</div>
                     <div class="stat-value" id="statTotalSales">—</div>
@@ -528,13 +558,16 @@
                 </div>
             </div>
 
+            <div class="stats" id="paymentStatusStats"></div>
+            <div class="stats" id="paymentMethodStats"></div>
+
             <div class="panel">
                 <div class="panel-head">
                     <h2 id="panelTitle">Overview</h2>
                     <span id="panelSub">All charts</span>
                 </div>
 
-                <!-- Overview: compact grid of all four charts -->
+                <!-- Overview: compact grid of all charts -->
                 <div id="overviewGrid" class="active">
                     <div class="mini-card">
                         <h3>Revenue Trend</h3>
@@ -592,7 +625,6 @@
                     </div>
                 </div>
             </div>
-
 
         </div>
     </div>
@@ -721,6 +753,21 @@
             });
         }
 
+        function renderPaymentStatCards(containerId, data) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            data.labels.forEach((label, i) => {
+                const card = document.createElement('div');
+                card.className = 'stat-card highlight compact';
+                card.innerHTML = `
+                    <div class="stat-label">${label}</div>
+                    <div class="stat-value">${data.counts[i]}</div>
+                    <div class="stat-sub">${fmtMoney(data.totals[i])} RWF</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
         // ---------- fetch + render ----------
         fetch("{% url 'sales_summary_data' %}").then(r => r.json()).then(data => {
             sourceData.revenue = data;
@@ -748,7 +795,6 @@
             document.getElementById('statProfit').textContent = fmtMoney(data.profit);
             document.getElementById('statLowStock').textContent = data.low_stock_products;
             document.getElementById('statPendingOrders').textContent = fmtMoney(data.pending_orders);
-            document.getElementById('statLowStockFeedTypes').textContent = data.low_stock_feedtypes; // new
         });
 
         fetch("{% url 'revenue_by_customer_data' %}").then(r => r.json()).then(data => {
@@ -761,11 +807,13 @@
         fetch("{% url 'payment_status_data' %}").then(r => r.json()).then(data => {
             chartInstances.paymentStatusMain = buildPieWithRevenue(document.getElementById('paymentStatusChart'), data);
             chartInstances.paymentStatusMini = buildPieWithRevenue(document.getElementById('miniPaymentStatus'), data);
+            renderPaymentStatCards('paymentStatusStats', data);
         });
 
         fetch("{% url 'payment_method_data' %}").then(r => r.json()).then(data => {
             chartInstances.paymentMethodMain = buildPieWithRevenue(document.getElementById('paymentMethodChart'), data);
             chartInstances.paymentMethodMini = buildPieWithRevenue(document.getElementById('miniPaymentMethod'), data);
+            renderPaymentStatCards('paymentMethodStats', data);
         });
 
         // ---------- model summary (counts per model) ----------
@@ -786,13 +834,6 @@
                 '<div class="model-tile"><div class="model-name">Model summary endpoint not found</div></div>';
         });
 
-        fetch("{% url 'payment_status_data' %}").then(r => r.json()).then(data => {
-            chartInstances.paymentStatusMain = buildPie(document.getElementById('paymentStatusChart'), data);
-        });
-
-        fetch("{% url 'payment_method_data' %}").then(r => r.json()).then(data => {
-            chartInstances.paymentMethodMain = buildPie(document.getElementById('paymentMethodChart'), data);
-        });
         fetch("{% url 'stock_consumption_data' %}").then(r => r.json()).then(data => {
             const tbody = document.getElementById('stockTableBody');
             tbody.innerHTML = '';
@@ -806,13 +847,13 @@
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-            <td>${row.product}</td>
-            <td>${row.store}</td>
-            <td>${row.stock_quantity}</td>
-            <td>${row.daily_consumption_rate}</td>
-            <td>${row.days_until_stockout ?? '—'}</td>
-            <td><span class="status-pill ${statusClass}">${statusText}</span></td>
-        `;
+                    <td>${row.product}</td>
+                    <td>${row.store}</td>
+                    <td>${row.stock_quantity}</td>
+                    <td>${row.daily_consumption_rate}</td>
+                    <td>${row.days_until_stockout ?? '—'}</td>
+                    <td><span class="status-pill ${statusClass}">${statusText}</span></td>
+                `;
                 tbody.appendChild(tr);
             });
         }).catch(() => {
@@ -820,14 +861,12 @@
                 '<tr><td colspan="6">Stock data unavailable.</td></tr>';
         });
 
-
-        // ---------- left-nav switching ----------
         // ---------- left-nav switching ----------
         const titles = {
-            paymentStatus: ['Payment Status', 'Paid / Unpaid / Prepaid breakdown'],
-            paymentMethod: ['Payment Method', 'Cash / Mobile Money / Bank / Card / Other'],
             overview: ['Overview', 'All charts'],
             revenue: ['Revenue Trend', 'Confirmed orders over time'],
+            paymentStatus: ['Payment Status', 'Paid / Unpaid / Prepaid breakdown'],
+            paymentMethod: ['Payment Method', 'Cash / Mobile Money / Bank / Card / Other'],
             products: ['Top Products', 'Ranked by revenue'],
             status: ['Orders by Status', 'Share of all orders'],
             customers: ['Top Customers', 'Ranked by revenue'],
