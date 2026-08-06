@@ -112,6 +112,14 @@ def dashboard_kpis(request):
     total_cost = totals['total_cost']
     profit = total_sales - total_cost
 
+    low_stock_feedtypes = (
+        Product.objects
+        .filter(stock_quantity__lte=F('reorder_level'))
+        .values('feed_type')
+        .distinct()
+        .count()
+    )
+
     return JsonResponse({
         "total_sales": float(total_sales),
         "total_cost": float(total_cost),
@@ -119,6 +127,7 @@ def dashboard_kpis(request):
         "total_orders": Order.objects.count(),
         "pending_orders": Order.objects.filter(status=Order.Status.PENDING).count(),
         "low_stock_products": Product.objects.filter(stock_quantity__lte=F('reorder_level')).count(),
+        "low_stock_feedtypes": low_stock_feedtypes,  # new
     })
 
 @permission_required('yourapp.can_view_dashboard', login_url='/')
@@ -271,7 +280,7 @@ def order_form(request):
 
             if quantity <= 0:
                 messages.error(request, "Quantity must be greater than 0.")
-            elif quantity > product.quantity:
+            elif quantity > product.stock_quantity:
                 messages.error(request, f"Only {product.quantity} available in stock.")
             else:
                 Order.objects.create(

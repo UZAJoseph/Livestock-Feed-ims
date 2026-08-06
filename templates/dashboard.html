@@ -230,6 +230,20 @@
             padding: 16px 18px;
         }
 
+
+        .stat-card.highlight {
+            background: rgba(201, 146, 86, 0.14);
+            border-color: rgba(214, 179, 131, 0.4);
+        }
+
+        .stat-card.highlight .stat-label {
+            color: #d6b383;
+        }
+
+        .stat-card.highlight .stat-value {
+            color: #f0d9b3;
+        }
+
         .stat-card .stat-label {
             font-size: 12px;
             color: var(--text-faint);
@@ -483,6 +497,14 @@
         <div class="main">
 
             <div class="stats">
+                <div class="stat-card highlight">
+                    <div class="stat-label">Pending Orders</div>
+                    <div class="stat-value" id="statPendingOrders">—</div>
+                </div>
+                <div class="stat-card highlight">
+                    <div class="stat-label">Feed Types Low on Stock</div>
+                    <div class="stat-value" id="statLowStockFeedTypes">—</div>
+                </div>
                 <div class="stat-card">
                     <div class="stat-label">Total Sales</div>
                     <div class="stat-value" id="statTotalSales">—</div>
@@ -686,6 +708,8 @@
             document.getElementById('statTotalCost').textContent = fmtMoney(data.total_cost);
             document.getElementById('statProfit').textContent = fmtMoney(data.profit);
             document.getElementById('statLowStock').textContent = data.low_stock_products;
+            document.getElementById('statPendingOrders').textContent = fmtMoney(data.pending_orders);
+            document.getElementById('statLowStockFeedTypes').textContent = data.low_stock_feedtypes; // new
         });
 
         fetch("{% url 'revenue_by_customer_data' %}").then(r => r.json()).then(data => {
