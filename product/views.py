@@ -23,7 +23,7 @@ from .models import Order, Product, PaymentMethod, PaymentStatus
 
 
 
-@permission_required('product.can_view_dashboard', login_url='/')
+@permission_required('yourapp.can_view_dashboard', login_url='/')
 def payment_status_data(request):
     status_labels = dict(PaymentStatus.choices)
     data = (
@@ -43,7 +43,7 @@ def payment_status_data(request):
     })
 
 
-@permission_required('product.can_view_dashboard', login_url='/')
+@permission_required('yourapp.can_view_dashboard', login_url='/')
 def payment_method_data(request):
     method_labels = dict(PaymentMethod.choices)
     data = (
@@ -62,7 +62,7 @@ def payment_method_data(request):
         "totals": [float(d["total"]) for d in data],
     })
 
-@permission_required('product.can_view_dashboard', login_url='/')
+@permission_required('yourapp.can_view_dashboard', login_url='/')
 def stock_consumption_data(request):
     """
     Consumption rate (avg units sold/day over trailing 30 days) per product,
@@ -106,7 +106,7 @@ def stock_consumption_data(request):
     return JsonResponse({"results": results})
 
 
-@permission_required('product.can_view_dashboard', login_url='/')
+@permission_required('yourapp.can_view_dashboard', login_url='/')
 def model_summary_data(request):
     counts = {
         "Users": User.objects.count(),
@@ -131,11 +131,11 @@ def model_summary_data(request):
 
 DECIMAL = DecimalField(max_digits=12, decimal_places=2)
 
-@permission_required('product.can_view_dashboard', login_url='/')
+@permission_required('yourapp.can_view_dashboard', login_url='/')
 def dashboard(request):
     return render(request, "dashboard.html")
 
-@permission_required('product.can_view_dashboard', login_url='/')
+@permission_required('yourapp.can_view_dashboard', login_url='/')
 def dashboard_kpis(request):
     """Quick summary numbers shown as cards at the top of the dashboard."""
     sale_items = SaleItem.objects.select_related('product')
@@ -171,7 +171,7 @@ def dashboard_kpis(request):
         "low_stock_feedtypes": low_stock_feedtypes,  # new
     })
 
-@permission_required('product.can_view_dashboard', login_url='/')
+@permission_required('yourapp.can_view_dashboard', login_url='/')
 def sales_summary_data(request):
     """Revenue per day, confirmed orders only."""
     data = (
@@ -190,7 +190,7 @@ def sales_summary_data(request):
         "counts": [d["count"] for d in data],
     })
 
-@permission_required('product.can_view_dashboard', login_url='/')
+@permission_required('yourapp.can_view_dashboard', login_url='/')
 def top_products_data(request):
     """Top 5 feed types by revenue (Product has no standalone 'name' field)."""
     data = (
@@ -205,7 +205,7 @@ def top_products_data(request):
     })
 
 
-@permission_required('product.can_view_dashboard', login_url='/')
+@permission_required('yourapp.can_view_dashboard', login_url='/')
 def orders_by_status_data(request):
     status_labels = dict(Order.Status.choices)
     data = Order.objects.values("status").annotate(count=Count("id"))
@@ -215,7 +215,7 @@ def orders_by_status_data(request):
     })
 
 
-@permission_required('product.can_view_dashboard', login_url='/')
+@permission_required('yourapp.can_view_dashboard', login_url='/')
 def revenue_by_customer_data(request):
     data = (
         Order.objects.filter(status=Order.Status.CONFIRMED)
