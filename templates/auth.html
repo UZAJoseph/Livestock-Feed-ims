@@ -198,7 +198,7 @@
                         <div class="errorlist mb-2">{{ login_form.non_field_errors }}</div>
                         {% endif %}
                         <div class="d-flex justify-content-end mb-3">
-                            <a href="#" class="link-accent" style="font-size: 0.85rem;">Forgot password?</a>
+                            <a href="{% url 'password_reset' %}" class="link-accent" style="font-size: 0.85rem;">Forgot password?</a>
                         </div>
                         <button type="submit" class="btn btn-purple w-100">Log in</button>
                     </form>
