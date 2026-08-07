@@ -185,15 +185,7 @@
                             <a class="nav-link" href="#" type="button" data-bs-toggle="modal"
                                 data-bs-target="#animalfeed">Animal Feed</a>
                         </li>
-                        <li class="nav-item">
-                            {% if user.is_authenticated %}
-                            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#orderNow">Order
-                                Now</a>
-                            {% else %}
-                            <a href="#" class="nav-link" onclick="markOrderIntent()" data-bs-toggle="modal"
-                                data-bs-target="#authModal">Order Now</a>
-                            {% endif %}
-                        </li>
+
 
                         {% if user.is_authenticated and perms.product.can_view_dashboard %}
                         <li class="nav-item">
@@ -300,8 +292,12 @@
                                 <li>No feed types listed.</li>
                                 {% endfor %}
                             </ul>
-                            <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#orderNow">Order
-                                Now</a>
+                            {% if user.is_authenticated %}
+                            <a href="#" class="btn btn-primary" onclick="openOrderModal({{ animal.id }})">Order Now</a>
+                            {% else %}
+                            <a href="#" class="btn btn-primary" onclick="markOrderIntent()" data-bs-toggle="modal"
+                                data-bs-target="#authModal">Order Now</a>
+                            {% endif %}
                         </div>
                     </div>
                 </div>

@@ -504,9 +504,7 @@
             <div class="topbar-right">
                 <div class="topbar-links">
                     <a href="{% url 'index' %}" class="topbar-link">← Back to Site</a>
-                    {% if user.is_staff and perms.product.can_view_admin_panel %}
                     <a href="/admin/" class="topbar-link">Django Admin</a>
-                    {% endif %}
                 </div>
                 <div class="note">Read-only snapshot. Manage stores, products, orders and users from the Django admin
                     panel.</div>
