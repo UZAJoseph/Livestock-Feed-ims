@@ -185,6 +185,28 @@
             </style>
 
             <script>
+                function openOrderModal(animalId) {
+    console.log('Clicked animal ID:', animalId, typeof animalId);
+
+    const modalEl = document.getElementById('orderNow');
+    const modal = new bootstrap.Modal(modalEl);
+
+    modalEl.addEventListener('shown.bs.modal', function handler() {
+        const animalSelect = document.getElementById('id_animal');
+        console.log('Available options:', Array.from(animalSelect.options).map(o => o.value));
+        animalSelect.value = animalId;
+        console.log('Select value after setting:', animalSelect.value);
+        animalSelect.dispatchEvent(new Event('change'));
+        modalEl.removeEventListener('shown.bs.modal', handler);
+    });
+
+    modal.show();
+}
+document.getElementById('orderNow').addEventListener('hide.bs.modal', function () {
+    if (document.activeElement && this.contains(document.activeElement)) {
+        document.activeElement.blur();
+    }
+});
                 document.addEventListener('DOMContentLoaded', function () {
 
                     const dataSelect = document.getElementById('products-data');
@@ -313,8 +335,7 @@
                             productSelect.disabled = false;
                         }
                     });
-
-
+                    
                     // -------------------------
                     // Price calculation
                     // -------------------------

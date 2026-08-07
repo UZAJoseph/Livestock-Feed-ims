@@ -233,8 +233,14 @@ def revenue_by_customer_data(request):
 
 
 def _base_context(request, **extra):
+    in_stock_animal_ids = (
+        Product.objects
+        .filter(stock_quantity__gt=0)
+        .values_list('feed_type__animal_id', flat=True)
+        .distinct()
+    )
     context = {
-        'animals': Animal.objects.all().order_by('name'),
+        'animals': Animal.objects.filter(id__in=in_stock_animal_ids).order_by('name'),
         'products': Product.objects.select_related('feed_type', 'feed_type__animal', 'store'),
         'register_form': RegisterForm(),
         'login_form': LoginForm(),
