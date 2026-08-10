@@ -189,6 +189,9 @@ STORAGES = {
     },
 }
 
+# Backward-compatibility setting required by django-cloudinary-storage's collectstatic override
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 #MEDIA
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
