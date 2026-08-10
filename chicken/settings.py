@@ -26,13 +26,18 @@ load_dotenv(BASE_DIR / '.env')
 SECRET_KEY = 'django-insecure-hnl8kas83nua*5fn#w#5j(zm2)gn65&p8ckg$=3h4d4f+kgqob'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
-RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+RAILWAY_PUBLIC_DOMAIN = os.environ.get('RAILWAY_PUBLIC_DOMAIN')
+if RAILWAY_PUBLIC_DOMAIN:
+    ALLOWED_HOSTS.append(RAILWAY_PUBLIC_DOMAIN)
+
+CSRF_TRUSTED_ORIGINS = []
+if RAILWAY_PUBLIC_DOMAIN:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{RAILWAY_PUBLIC_DOMAIN}')
 
 # Application definition
 
@@ -78,23 +83,33 @@ TEMPLATES = [
 WSGI_APPLICATION = 'chicken.wsgi.application'
 
 
-# Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+# DATABASE
+MYSQL_URL = os.environ.get('MYSQL_URL') or os.environ.get('MYSQL_PUBLIC_URL')
 
-DATABASE_URL = os.environ.get('DATABASE_URL')
-
-if DATABASE_URL:
-    # Production (Render) — Postgres, parsed from the single DATABASE_URL env var
+if MYSQL_URL:
+    # Railway MySQL plugin
     DATABASES = {
-        'default': dj_database_url.config(
-            default=DATABASE_URL,
+        'default': dj_database_url.parse(
+            MYSQL_URL,
             conn_max_age=600,
-            ssl_require=True,
         )
     }
+elif all(os.environ.get(v) for v in ['MYSQLHOST', 'MYSQLUSER', 'MYSQLPASSWORD', 'MYSQLDATABASE']):
+    # Fallback: Railway individual MySQL vars
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ['MYSQLDATABASE'],
+            'USER': os.environ['MYSQLUSER'],
+            'PASSWORD': os.environ['MYSQLPASSWORD'],
+            'HOST': os.environ['MYSQLHOST'],
+            'PORT': os.environ.get('MYSQLPORT', '3306'),
+        }
+    }
 else:
-    # Local development — MariaDB
+    # Local development
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
