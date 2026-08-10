@@ -50,7 +50,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'cloudinary_storage',
     'cloudinary',
 ]
 
@@ -189,8 +188,8 @@ STORAGES = {
     },
 }
 
-# Backward-compatibility setting required by django-cloudinary-storage's collectstatic override
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 
 #MEDIA
 MEDIA_URL = '/media/'
