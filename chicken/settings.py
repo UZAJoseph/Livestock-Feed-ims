@@ -29,15 +29,15 @@ SECRET_KEY = 'django-insecure-hnl8kas83nua*5fn#w#5j(zm2)gn65&p8ckg$=3h4d4f+kgqob
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.up.railway.app']
 
 RAILWAY_PUBLIC_DOMAIN = os.environ.get('RAILWAY_PUBLIC_DOMAIN')
 if RAILWAY_PUBLIC_DOMAIN:
     ALLOWED_HOSTS.append(RAILWAY_PUBLIC_DOMAIN)
 
-CSRF_TRUSTED_ORIGINS = []
+CSRF_TRUSTED_ORIGINS = ['https://*.up.railway.app']
 if RAILWAY_PUBLIC_DOMAIN:
-    CSRF_TRUSTED_ORIGINS.append(f'https://{RAILWAY_PUBLIC_DOMAIN}')
+    CSRF_TRUSTED_ORIGINS.append(f'https://{RAILWAY_PUBLIC_DOMAIN}')  
 
 # Application definition
 
