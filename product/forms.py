@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from .models import UserProfile, FeedType, Review
-
+import re
 
 
 
@@ -82,6 +82,30 @@ class RegisterForm(forms.Form):
             raise forms.ValidationError("An account with this email already exists.")
         return email
 
+    def clean_telephone(self):
+        raw = self.cleaned_data['telephone'].strip()
+        # strip spaces, dashes, parentheses
+        cleaned = re.sub(r'[\s\-()]', '', raw)
+
+        # Accept 07XXXXXXXX (10 digits) or +2507XXXXXXXX / 2507XXXXXXXX
+        local_pattern = r'^07[2-9]\d{7}$'
+        intl_pattern = r'^(\+?250)7[2-9]\d{7}$'
+
+        if re.match(local_pattern, cleaned):
+            normalized = '+250' + cleaned[1:]  # 0788123456 -> +250788123456
+        elif re.match(intl_pattern, cleaned):
+            digits = cleaned.lstrip('+')
+            normalized = '+' + digits
+        else:
+            raise forms.ValidationError(
+                "Enter a valid Rwandan phone number, e.g. 0788123456 or +250788123456."
+            )
+
+        if UserProfile.objects.filter(telephone=normalized).exists():
+            raise forms.ValidationError("An account with this telephone number already exists.")
+
+        return normalized
+
     def clean(self):
         cleaned_data = super().clean()
         password1 = cleaned_data.get('password1')
@@ -111,30 +135,48 @@ class RegisterForm(forms.Form):
 
 
 class LoginForm(forms.Form):
-    email = forms.EmailField(
+    identifier = forms.CharField(
         required=True,
-        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email'})
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Email or Telephone'})
     )
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Enter your password'})
     )
 
+    @staticmethod
+    def _normalize_phone(value):
+        """Returns normalized +250 phone string if value looks like a phone number, else None."""
+        cleaned = re.sub(r'[\s\-()]', '', value)
+        if re.match(r'^07[2-9]\d{7}$', cleaned):
+            return '+250' + cleaned[1:]
+        if re.match(r'^2507[2-9]\d{7}$', cleaned):
+            return '+' + cleaned
+        if re.match(r'^\+2507[2-9]\d{7}$', cleaned):
+            return cleaned
+        return None
+
     def clean(self):
         cleaned_data = super().clean()
-        email = cleaned_data.get('email')
+        identifier = cleaned_data.get('identifier', '').strip()
         password = cleaned_data.get('password')
 
-        if email and password:
+        if identifier and password:
             try:
-                user_obj = User.objects.get(email__iexact=email)
+                if '@' in identifier:
+                    user_obj = User.objects.get(email__iexact=identifier)
+                else:
+                    normalized_phone = self._normalize_phone(identifier)
+                    if normalized_phone is None:
+                        raise forms.ValidationError("Invalid email/telephone or password.")
+                    user_obj = User.objects.get(profile__telephone=normalized_phone)
             except User.DoesNotExist:
-                raise forms.ValidationError("Invalid email or password.")
+                raise forms.ValidationError("Invalid email/telephone or password.")
             except User.MultipleObjectsReturned:
-                raise forms.ValidationError("Multiple accounts share this email. Contact support.")
+                raise forms.ValidationError("Multiple accounts share this identifier. Contact support.")
 
             user = authenticate(username=user_obj.username, password=password)
             if user is None:
-                raise forms.ValidationError("Invalid email or password.")
+                raise forms.ValidationError("Invalid email/telephone or password.")
             cleaned_data['user'] = user
 
         return cleaned_data

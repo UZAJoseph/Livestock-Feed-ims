@@ -182,8 +182,8 @@
                         {% csrf_token %}
                         <input type="hidden" name="next" id="id_login_next" value="">
                         <div class="mb-3">
-                            {{ login_form.email }}
-                            {{ login_form.email.errors }}
+                            {{ login_form.identifier }}
+                            {{ login_form.identifier.errors }}
                         </div>
                         <div class="mb-3 position-relative">
                             {{ login_form.password }}
