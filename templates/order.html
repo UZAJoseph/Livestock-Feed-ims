@@ -50,7 +50,7 @@
                             data-quantity="{{ product.stock_quantity }}" data-amount="{{ product.amount }}"
                             data-measure-name="{{ product.measure.name }}"
                             data-measure-abbr="{{ product.measure.abbreviation }}"
-                            data-label="{{ product.amount }}{{ product.measure.abbreviation }} - {{ product.default_price }} RWF">
+                            data-label="{{ product.store.name }} - {{ product.amount }}{{ product.measure.abbreviation }} - {{ product.default_price }} RWF">
                         </option>
                         {% endfor %}
                     </select>
@@ -73,8 +73,8 @@
                     </div>
 
                     <hr>
-                    <p class="mb-2" style="color: rgba(255,255,255,0.6); font-size: 0.85rem;">
-                        Delivery details (from your account)
+                    <p class="mb-2 text-center" style="color: rgba(255,255,255,0.6); font-size: 0.85rem;">
+                        My Personal Information
                     </p>
 
                     <div class="row g-2 mb-2">

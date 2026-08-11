@@ -67,7 +67,7 @@ def transfer_list_data(request):
             "status": t.status,
             "status_display": t.get_status_display(),
             "source_review_note": t.source_review_note,
-            "created_at": t.created_at.strftime("%b %d, %Y %H:%M"),
+            "created_at": timezone.localtime(t.created_at).strftime("%b %d, %Y %H:%M"),
         }
 
     all_results = [serialize(t) for t in transfers]
