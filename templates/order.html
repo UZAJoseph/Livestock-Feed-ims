@@ -64,6 +64,9 @@
                             <label class="form-label" id="quantityLabel">Quantity</label>
                             <input type="number" step="0.01" min="0.01" name="quantity" id="id_quantity"
                                 class="form-control" required>
+                            <div class="form-text text-white-50" id="totalPhysicalHelper"></div>
+                            <div id="stockAvailableText" class="form-text" style="color: rgba(255,255,255,0.6);"></div>
+                            <div id="quantityError" class="form-text" style="display:none; color:#ff8a80;"></div>
                         </div>
                     </div>
 
@@ -111,11 +114,16 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="btn btn-success">Order Now</button>
+                    <button type="submit" id="orderSubmitBtn" class="btn btn-success">Order Now</button>
                 </form>
             </div>
 
             <style>
+                .glass-modal .form-select option:disabled {
+                    color: rgba(255, 120, 120, 0.65);
+                    font-style: italic;
+                }
+
                 .glass-modal .modal-content {
                     background: rgba(255, 255, 255, 0.15);
                     backdrop-filter: blur(12px);
@@ -186,27 +194,27 @@
 
             <script>
                 function openOrderModal(animalId) {
-    console.log('Clicked animal ID:', animalId, typeof animalId);
+                    console.log('Clicked animal ID:', animalId, typeof animalId);
 
-    const modalEl = document.getElementById('orderNow');
-    const modal = new bootstrap.Modal(modalEl);
+                    const modalEl = document.getElementById('orderNow');
+                    const modal = new bootstrap.Modal(modalEl);
 
-    modalEl.addEventListener('shown.bs.modal', function handler() {
-        const animalSelect = document.getElementById('id_animal');
-        console.log('Available options:', Array.from(animalSelect.options).map(o => o.value));
-        animalSelect.value = animalId;
-        console.log('Select value after setting:', animalSelect.value);
-        animalSelect.dispatchEvent(new Event('change'));
-        modalEl.removeEventListener('shown.bs.modal', handler);
-    });
+                    modalEl.addEventListener('shown.bs.modal', function handler() {
+                        const animalSelect = document.getElementById('id_animal');
+                        console.log('Available options:', Array.from(animalSelect.options).map(o => o.value));
+                        animalSelect.value = animalId;
+                        console.log('Select value after setting:', animalSelect.value);
+                        animalSelect.dispatchEvent(new Event('change'));
+                        modalEl.removeEventListener('shown.bs.modal', handler);
+                    });
 
-    modal.show();
-}
-document.getElementById('orderNow').addEventListener('hide.bs.modal', function () {
-    if (document.activeElement && this.contains(document.activeElement)) {
-        document.activeElement.blur();
-    }
-});
+                    modal.show();
+                }
+                document.getElementById('orderNow').addEventListener('hide.bs.modal', function () {
+                    if (document.activeElement && this.contains(document.activeElement)) {
+                        document.activeElement.blur();
+                    }
+                });
                 document.addEventListener('DOMContentLoaded', function () {
 
                     const dataSelect = document.getElementById('products-data');
@@ -275,7 +283,7 @@ document.getElementById('orderNow').addEventListener('hide.bs.modal', function (
                                     feed = { id: feedId, name: feedName, hasStock: inStock };
                                     feedTypes.push(feed);
                                 } else if (inStock) {
-                                    feed.hasStock = true; // any in-stock product upgrades the whole feed type
+                                    feed.hasStock = true;
                                 }
                             }
                         });
@@ -283,10 +291,9 @@ document.getElementById('orderNow').addEventListener('hide.bs.modal', function (
                         feedTypes.forEach(feed => {
                             const option = document.createElement('option');
                             option.value = feed.id;
-                            option.textContent = feed.hasStock ? feed.name : `${feed.name} (Out of stock)`;
+                            option.textContent = feed.hasStock ? feed.name : `${feed.name} — Out of Stock`;
                             if (!feed.hasStock) {
                                 option.disabled = true;
-                                option.style.color = 'rgba(255,255,255,0.4)';
                             }
                             feedTypeSelect.appendChild(option);
                         });
@@ -319,12 +326,13 @@ document.getElementById('orderNow').addEventListener('hide.bs.modal', function (
                                 option.value = product.value;
                                 option.textContent = inStock
                                     ? product.dataset.label
-                                    : `${product.dataset.label} (Out of stock)`;
-                                option.dataset.price = product.dataset.price;
+                                    : `${product.dataset.label} — Out of Stock`;
+
+                                // copy every data-* attribute (price, quantity, amount, measureName, measureAbbr, label, etc.)
+                                Object.assign(option.dataset, product.dataset);
 
                                 if (!inStock) {
                                     option.disabled = true;
-                                    option.style.color = 'rgba(255,255,255,0.4)';
                                 }
 
                                 productSelect.appendChild(option);
@@ -335,37 +343,61 @@ document.getElementById('orderNow').addEventListener('hide.bs.modal', function (
                             productSelect.disabled = false;
                         }
                     });
-                    
+
                     // -------------------------
                     // Price calculation
                     // -------------------------
                     function updatePrices() {
                         const selected = productSelect.options[productSelect.selectedIndex];
 
-                        const price = Number(selected?.dataset.price || 0);
+                        const price = Number(selected?.dataset.price || 0);              // price per package
+                        const stockPackages = Number(selected?.dataset.quantity || 0);   // NUMBER OF PACKAGES in stock
                         const measureName = selected?.dataset.measureName || '';
                         const measureAbbr = selected?.dataset.measureAbbr || '';
-                        const packageAmount = selected?.dataset.amount || '';
+                        const packageAmount = Number(selected?.dataset.amount || 0);     // physical size of ONE package
 
-                        const quantity = Number(quantityInput.value || 0);
+                        const quantity = Number(quantityInput.value || 0);               // number of PACKAGES ordered
 
                         unitPriceField.value = price.toFixed(2);
                         totalPriceField.value = (price * quantity).toFixed(2);
 
-                        const totalPhysical = (Number(packageAmount) * quantity).toFixed(2);
+                        const totalPhysical = packageAmount * quantity;                  // informational only
                         document.getElementById('totalPhysicalHelper').textContent =
-                            quantity > 0 ? `= ${totalPhysical}${measureAbbr} total` : '';
+                            quantity > 0 ? `= ${totalPhysical.toFixed(2)}${measureAbbr} total` : '';
 
-                        // dynamic labels
                         document.getElementById('unitPriceLabel').textContent =
                             selected && selected.value
                                 ? `Price per ${packageAmount}${measureAbbr} ${measureName}`
                                 : 'Unit Price';
 
                         document.getElementById('quantityLabel').textContent =
-                            selected && selected.value
-                                ? `Quantity (in ${measureName || 'units'})`
-                                : 'Quantity';
+                            selected && selected.value ? 'Quantity (number of packages)' : 'Quantity';
+
+                        const stockText = document.getElementById('stockAvailableText');
+                        const errorText = document.getElementById('quantityError');
+                        const submitBtn = document.getElementById('orderSubmitBtn');
+
+                        if (selected && selected.value) {
+                            quantityInput.max = stockPackages;
+                            stockText.textContent = `${stockPackages} package(s) in stock`;
+
+                            if (quantity > stockPackages) {
+                                errorText.textContent = `Only ${stockPackages} package(s) available in stock.`;
+                                errorText.style.display = 'block';
+                                quantityInput.classList.add('is-invalid');
+                                submitBtn.disabled = true;
+                            } else {
+                                errorText.style.display = 'none';
+                                quantityInput.classList.remove('is-invalid');
+                                submitBtn.disabled = false;
+                            }
+                        } else {
+                            quantityInput.removeAttribute('max');
+                            stockText.textContent = '';
+                            errorText.style.display = 'none';
+                            quantityInput.classList.remove('is-invalid');
+                            submitBtn.disabled = false;
+                        }
                     }
 
 

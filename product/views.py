@@ -585,7 +585,12 @@ def order_form(request):
             if quantity <= 0:
                 messages.error(request, "Quantity must be greater than 0.")
             elif quantity > product.stock_quantity:
-                messages.error(request, f"Only {product.stock_quantity} available in stock.")
+                total_kg = product.stock_quantity * product.amount
+                messages.error(
+                    request,
+                    f"Only {product.stock_quantity} package(s) available in stock "
+                    f"({total_kg}{product.measure.abbreviation} total)."
+                )
             else:
                 Order.objects.create(
                     user=request.user,
@@ -608,6 +613,7 @@ def order_form(request):
             messages.error(request, "Invalid quantity.")
 
     return render(request, 'base.html', _base_context(request))
+
 
 def _apply_common_filters(qs, request, animal_field, feedtype_field, date_field=None):
     animal_id = request.GET.get('animal')
