@@ -127,13 +127,14 @@ def confirm_orders(modeladmin, request, queryset):
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'full_name', 'telephone', 'product', 'quantity',
-        'unit_price', 'total_price', 'status', 'created_at', 'confirmed_by',
+        'id', 'full_name', 'telephone', 'product', 'quantity', 'order_type',
+        'unit_price', 'total_price', 'requested_date', 'status', 'created_at', 'confirmed_by',
     )
-    list_filter = ('status', 'district', 'sector', 'product__store')
+    list_filter = ('order_type','status', 'district', 'sector', 'product__store', 'requested_date')
     search_fields = ('full_name', 'telephone', 'district', 'sector', 'cell')
     readonly_fields = ('unit_price', 'created_at', 'confirmed_by', 'confirmed_at')
     ordering = ('-created_at',)
+    date_hierarchy = 'requested_date'
     actions = [confirm_orders]
 
 

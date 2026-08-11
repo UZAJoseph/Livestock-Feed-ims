@@ -226,14 +226,14 @@
         }
     }
 
-    function markOrderIntent() {
-        document.getElementById('id_login_next').value = 'order';
-        document.getElementById('id_register_next').value = 'order';
-    }
+    function markOrderIntent(type) {
+    document.getElementById('id_login_next').value = 'order_' + type; // 'order_now' or 'order_book'
+    document.getElementById('id_register_next').value = 'order_' + type;
+}
 
-    {% if open_modal == 'orderNow' %}
+    {% if open_modal == 'orderNow' or open_modal == 'bookNow' %}
 document.addEventListener('DOMContentLoaded', function () {
-    var modal = new bootstrap.Modal(document.getElementById('orderNow'));
+    var modal = new bootstrap.Modal(document.getElementById('{{ open_modal }}'));
     modal.show();
 });
 {% elif open_modal %}

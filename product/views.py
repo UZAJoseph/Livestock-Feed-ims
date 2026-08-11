@@ -19,6 +19,8 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from .models import Order, Product, PaymentMethod, PaymentStatus, StockTransferRequest
 from django.core.exceptions import ValidationError
+from datetime import timedelta, datetime
+from django.utils import timezone
 
 
 
@@ -559,10 +561,12 @@ def review_create(request):
 
 def index(request):
     context = _base_context(request)
-    if request.session.pop('open_order_modal', False):
+    order_intent = request.session.pop('open_order_modal', None)
+    if order_intent == 'now':
         context['open_modal'] = 'orderNow'
+    elif order_intent == 'book':
+        context['open_modal'] = 'bookNow'
     return render(request, 'base.html', context)
-
 
 def logout_view(request):
     auth_logout(request)
@@ -577,6 +581,14 @@ def order_form(request):
     if request.method == 'POST':
         product_id = request.POST.get('product')
         quantity = request.POST.get('quantity')
+        order_type = request.POST.get('order_type', 'now')
+        requested_date_raw = request.POST.get('requested_date', '').strip()
+
+        # NEW: reject anything that isn't a real choice instead of silently
+        # falling through to "now"
+        if order_type not in (Order.OrderType.NOW, Order.OrderType.BOOK):
+            messages.error(request, "Invalid order type.")
+            return render(request, 'base.html', _base_context(request))
 
         try:
             product = Product.objects.get(pk=product_id)
@@ -584,35 +596,78 @@ def order_form(request):
 
             if quantity <= 0:
                 messages.error(request, "Quantity must be greater than 0.")
-            elif quantity > product.stock_quantity:
-                total_kg = product.stock_quantity * product.amount
-                messages.error(
-                    request,
-                    f"Only {product.stock_quantity} package(s) available in stock "
-                    f"({total_kg}{product.measure.abbreviation} total)."
-                )
+                return render(request, 'base.html', _base_context(request))
+
+            requested_date = None
+
+            if order_type == Order.OrderType.BOOK:
+                # ---- Booking mode: date required, 5–21 days out, stock NOT checked ----
+                if not requested_date_raw:
+                    messages.error(request, "Please select a date for your booking.")
+                    return render(request, 'base.html', _base_context(request))
+
+                try:
+                    requested_date = datetime.strptime(requested_date_raw, '%Y-%m-%d').date()
+                except ValueError:
+                    messages.error(request, "Invalid date format.")
+                    return render(request, 'base.html', _base_context(request))
+
+                today = timezone.localdate()
+                earliest = today + timedelta(days=5)
+                latest = today + timedelta(days=21)
+
+                if requested_date < earliest or requested_date > latest:
+                    messages.error(
+                        request,
+                        f"Booking date must be between {earliest:%b %d, %Y} and {latest:%b %d, %Y}."
+                    )
+                    return render(request, 'base.html', _base_context(request))
+
             else:
-                Order.objects.create(
-                    user=request.user,
-                    product=product,
-                    quantity=quantity,
-                    unit_price=product.default_price,
-                    full_name=f"{request.user.first_name} {request.user.last_name}".strip(),
-                    telephone=profile.telephone if profile else '',
-                    district=profile.district if profile else '',
-                    sector=profile.sector if profile else '',
-                    cell=profile.cell if profile else '',
-                )
+                # ---- Order Now mode: stock check enforced, no date needed ----
+                if quantity > product.stock_quantity:
+                    total_kg = product.stock_quantity * product.amount
+                    messages.error(
+                        request,
+                        f"Only {product.stock_quantity} package(s) available in stock "
+                        f"({total_kg}{product.measure.abbreviation} total)."
+                    )
+                    return render(request, 'base.html', _base_context(request))
+
+            order = Order(
+                user=request.user,
+                product=product,
+                quantity=quantity,
+                unit_price=product.default_price,
+                order_type=order_type,
+                full_name=f"{request.user.first_name} {request.user.last_name}".strip(),
+                telephone=profile.telephone if profile else '',
+                district=profile.district if profile else '',
+                sector=profile.sector if profile else '',
+                cell=profile.cell if profile else '',
+                village=profile.village if profile else '',
+                requested_date=requested_date,
+            )
+            order.full_clean()  # NEW: runs Order.clean(), catches edge cases before save
+            order.save()
+
+            if order_type == Order.OrderType.BOOK:
+                messages.success(request, "Your booking has been submitted! We'll contact you shortly to confirm.")
+            else:
                 messages.success(request, "Your order has been submitted! We'll contact you shortly to confirm.")
-                request.session['open_order_modal'] = True
-                return redirect('index')
+
+            request.session['open_order_modal'] = True
+            return redirect('index')
 
         except Product.DoesNotExist:
             messages.error(request, "Selected product not found.")
         except (ValueError, TypeError):
             messages.error(request, "Invalid quantity.")
+        except ValidationError as e:
+            messages.error(request, " ".join(e.messages))
 
     return render(request, 'base.html', _base_context(request))
+
 
 
 def _apply_common_filters(qs, request, animal_field, feedtype_field, date_field=None):

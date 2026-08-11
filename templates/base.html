@@ -331,9 +331,13 @@
                             </ul>
                             {% if user.is_authenticated %}
                             <a href="#" class="btn btn-primary" onclick="openOrderModal({{ animal.id }})">Order Now</a>
+                            <a href="#" class="btn btn-warning"
+                                onclick="openOrderModal({{ animal.id }}, 'bookNow', 'book')">Book Now</a>
                             {% else %}
-                            <a href="#" class="btn btn-primary" onclick="markOrderIntent()" data-bs-toggle="modal"
+                            <a href="#" class="btn btn-primary" onclick="markOrderIntent('now')" data-bs-toggle="modal"
                                 data-bs-target="#authModal">Order Now</a>
+                            <a href="#" class="btn btn-warning" onclick="markOrderIntent('book')" data-bs-toggle="modal"
+                                data-bs-target="#authModal">Book Now</a>
                             {% endif %}
                         </div>
                     </div>

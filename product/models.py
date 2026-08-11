@@ -5,7 +5,7 @@ from django.core.validators import MinValueValidator
 from django.db import models, transaction
 from django.utils import timezone
 from django.contrib.auth.models import User
-
+from datetime import timedelta
 
 
 
@@ -348,18 +348,24 @@ class PaymentMethod(models.TextChoices):
 
 
 class Order(models.Model):
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders' )
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
+
     class Meta:
-        ordering = ['-created_at']  # keep whatever you already have here
+        ordering = ['-created_at']
         permissions = [
             ("can_view_dashboard", "Can view dashboard"),
-            ("can_view_admin_panel", "Can view admin panel link"), 
+            ("can_view_admin_panel", "Can view admin panel link"),
         ]
 
     class Status(models.TextChoices):
         PENDING = 'pending', 'Pending'
         CONFIRMED = 'confirmed', 'Confirmed'
         CANCELLED = 'cancelled', 'Cancelled'
+
+    # NEW
+    class OrderType(models.TextChoices):
+        NOW = 'now', 'Order Now'
+        BOOK = 'book', 'Book Now'
 
     product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='orders')
     quantity = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0.01)])
@@ -370,13 +376,20 @@ class Order(models.Model):
     district = models.CharField(max_length=100)
     sector = models.CharField(max_length=100)
     cell = models.CharField(max_length=100)
+    village = models.CharField(max_length=100, blank=True, default='')  # NEW
+
+    # NEW
+    order_type = models.CharField(max_length=10, choices=OrderType.choices, default=OrderType.NOW)
+
+    requested_date = models.DateField(
+        null=True, blank=True,
+        help_text="Date the client wants this order ready/delivered. Leave blank for ASAP."
+    )
 
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
     confirmed_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True, blank=True,
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
         related_name='confirmed_orders',
     )
     confirmed_at = models.DateTimeField(null=True, blank=True)
@@ -388,6 +401,27 @@ class Order(models.Model):
     def total_price(self):
         return self.quantity * self.unit_price
 
+    @property
+    def is_preorder(self):
+        """True if placed while the requested stock wasn't fully available."""
+        return self.quantity > self.product.stock_quantity
+
+    def clean(self):
+        if self.requested_date and self.requested_date < timezone.localdate():
+            raise ValidationError("Requested date cannot be in the past.")
+
+        # NEW: enforce the booking window at the model level too, not just the view
+        if self.order_type == self.OrderType.BOOK:
+            if not self.requested_date:
+                raise ValidationError("A requested date is required for bookings.")
+            today = timezone.localdate()
+            earliest = today + timedelta(days=5)
+            latest = today + timedelta(days=21)
+            if self.requested_date < earliest or self.requested_date > latest:
+                raise ValidationError(
+                    f"Booking date must be between {earliest:%b %d, %Y} and {latest:%b %d, %Y}."
+                )
+
     def save(self, *args, **kwargs):
         if not self.unit_price:
             self.unit_price = self.product.default_price
@@ -395,7 +429,6 @@ class Order(models.Model):
 
     @transaction.atomic
     def confirm(self, confirmed_by, payment_status, payment_method):
-        """Manager/admin confirms the order and decides the payment status."""
         if self.status != Order.Status.PENDING:
             raise ValidationError("Only pending orders can be confirmed.")
 
@@ -410,7 +443,7 @@ class Order(models.Model):
             sold_by=confirmed_by,
             order=self,
             payment_status=payment_status,
-            payment_method = payment_method,
+            payment_method=payment_method,
         )
 
         SaleItem.objects.create(
@@ -418,7 +451,7 @@ class Order(models.Model):
             product=self.product,
             quantity=self.quantity,
             unit_price=self.unit_price,
-        )  # deducts Product.quantity automatically via SaleItem.save()
+        )
 
         self.status = Order.Status.CONFIRMED
         self.confirmed_by = confirmed_by
