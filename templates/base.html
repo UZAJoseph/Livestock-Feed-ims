@@ -155,6 +155,27 @@
             opacity: 0.9;
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
+
+        .ohibu-nav .dropdown-menu {
+            background: rgba(30, 20, 40, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .ohibu-nav .dropdown-item {
+            color: white;
+        }
+
+        .ohibu-nav .dropdown-item:hover,
+        .ohibu-nav .dropdown-item:focus {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+
+        .ohibu-nav .dropdown-toggle::after {
+            vertical-align: middle;
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -186,6 +207,21 @@
                             <a class="nav-link" href="#" type="button" data-bs-toggle="modal"
                                 data-bs-target="#animalfeed">Animal Feed</a>
                         </li>
+
+                        {% if user.is_authenticated and not user.is_staff %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="transferDropdown" role="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                Stock Request
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="transferDropdown">
+                                <li><a class="dropdown-item" href="{% url 'transfer_request_create' %}">New Request</a>
+                                </li>
+                                <li><a class="dropdown-item" href="{% url 'my_transfer_requests' %}">My Requests</a>
+                                </li>
+                            </ul>
+                        </li>
+                        {% endif %}
 
 
                         {% if user.is_authenticated and perms.product.can_view_dashboard %}
@@ -353,152 +389,152 @@
         </section>
 
         <section id="aboutUs">
-     <style>
-    .footer-dark {
-        background-color: #26152b;
-        color: #a2adbd;
-        padding-top: 3rem;
-    }
+            <style>
+                .footer-dark {
+                    background-color: #26152b;
+                    color: #a2adbd;
+                    padding-top: 3rem;
+                }
 
-    .footer-dark h6.footer-heading {
-        color: #4fd1c5;
-        letter-spacing: 1px;
-        font-weight: 700;
-        font-size: 0.85rem;
-        text-transform: uppercase;
-        margin-bottom: 1.2rem;
-    }
+                .footer-dark h6.footer-heading {
+                    color: #4fd1c5;
+                    letter-spacing: 1px;
+                    font-weight: 700;
+                    font-size: 0.85rem;
+                    text-transform: uppercase;
+                    margin-bottom: 1.2rem;
+                }
 
-    .footer-dark a {
-        color: #b8c2d1;
-        text-decoration: none;
-        display: block;
-        margin-bottom: 0.6rem;
-        transition: color 0.2s ease;
-    }
+                .footer-dark a {
+                    color: #b8c2d1;
+                    text-decoration: none;
+                    display: block;
+                    margin-bottom: 0.6rem;
+                    transition: color 0.2s ease;
+                }
 
-    .footer-dark a:hover {
-        color: #4fd1c5;
-        background: transparent;
-        font-size: inherit;
-    }
+                .footer-dark a:hover {
+                    color: #4fd1c5;
+                    background: transparent;
+                    font-size: inherit;
+                }
 
-    .footer-dark .contact-item {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-        margin-bottom: 0.8rem;
-        color: #b8c2d1;
-    }
+                .footer-dark .contact-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.6rem;
+                    margin-bottom: 0.8rem;
+                    color: #b8c2d1;
+                }
 
-    .footer-dark .contact-item i {
-        color: #4fd1c5;
-    }
+                .footer-dark .contact-item i {
+                    color: #4fd1c5;
+                }
 
-    .footer-brand h5 {
-        color: #4fd1c5;
-        font-weight: 700;
-        margin-bottom: 0.2rem;
-    }
+                .footer-brand h5 {
+                    color: #4fd1c5;
+                    font-weight: 700;
+                    margin-bottom: 0.2rem;
+                }
 
-    .footer-brand h4 {
-        color: #fff;
-        font-weight: 700;
-    }
+                .footer-brand h4 {
+                    color: #fff;
+                    font-weight: 700;
+                }
 
-    .footer-social a {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 38px;
-        height: 38px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.08);
-        color: #fff;
-        margin-right: 0.6rem;
-        margin-bottom: 0;
-        transition: background 0.2s ease;
-    }
+                .footer-social a {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 38px;
+                    height: 38px;
+                    border-radius: 50%;
+                    background: rgba(255, 255, 255, 0.08);
+                    color: #fff;
+                    margin-right: 0.6rem;
+                    margin-bottom: 0;
+                    transition: background 0.2s ease;
+                }
 
-    .footer-social a:hover {
-        background: #4fd1c5;
-        color: #0d1424;
-    }
+                .footer-social a:hover {
+                    background: #4fd1c5;
+                    color: #0d1424;
+                }
 
-    .footer-bottom {
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-        margin-top: 2.5rem;
-        padding: 1.2rem 0;
-        font-size: 0.85rem;
-        color: #7c8797;
-    }
-</style>
+                .footer-bottom {
+                    border-top: 1px solid rgba(255, 255, 255, 0.08);
+                    margin-top: 2.5rem;
+                    padding: 1.2rem 0;
+                    font-size: 0.85rem;
+                    color: #7c8797;
+                }
+            </style>
 
-<footer class="footer-dark">
-    <div class="container">
-        <div class="row gy-4">
+            <footer class="footer-dark">
+                <div class="container">
+                    <div class="row gy-4">
 
-            <div class="col-md-4">
-                <div class="footer-brand d-flex align-items-center gap-2 mb-3">
-                    <img src="{% static 'Images/logo1.png' %}" alt="OHIBU Logo" width="55" height="55">
-                    <div>
-                        <h5 class="mb-0">OHIBU</h5>
-                        <h4 class="mb-0" style="font-size:1.1rem;">Over Hills Business Unit</h4>
+                        <div class="col-md-4">
+                            <div class="footer-brand d-flex align-items-center gap-2 mb-3">
+                                <img src="{% static 'Images/logo1.png' %}" alt="OHIBU Logo" width="55" height="55">
+                                <div>
+                                    <h5 class="mb-0">OHIBU</h5>
+                                    <h4 class="mb-0" style="font-size:1.1rem;">Over Hills Business Unit</h4>
+                                </div>
+                            </div>
+                            <p class="mb-4" style="color:#7c8797;">
+                                Premium Animal Feed for Healthier Livestock — outstanding
+                                customer service and fast, reliable delivery to keep your farm running smoothly.
+                            </p>
+                            <div class="footer-social">
+                                <a href="#"><i class="bi bi-linkedin"></i></a>
+                                <a href="#"><i class="bi bi-twitter-x"></i></a>
+                                <a href="#"><i class="bi bi-facebook"></i></a>
+                                <a href="#"><i class="bi bi-whatsapp"></i></a>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2 col-6">
+                            <h6 class="footer-heading">Quick Links</h6>
+                            <a href="#">Home</a>
+                            <a href="#service">Services</a>
+                            <a href="#aboutUs">About Us</a>
+                            <a href="#reviews">Reviews</a>
+                            <a href="#">Contact</a>
+                        </div>
+
+                        <div class="col-md-3 col-6">
+                            <h6 class="footer-heading">Services</h6>
+                            <a href="#service">Animal Feed Supply</a>
+                            <a href="#service">Livestock Consultation</a>
+                            <a href="#service">Fast Delivery</a>
+                            <a href="#service">Client Support</a>
+                        </div>
+
+                        <div class="col-md-3">
+                            <h6 class="footer-heading">Contact Us</h6>
+                            <div class="contact-item">
+                                <i class="bi bi-envelope"></i>
+                                <span>info@ohiburwanda.com</span>
+                            </div>
+                            <div class="contact-item">
+                                <i class="bi bi-telephone"></i>
+                                <span>+250 787 xxx xxx</span>
+                            </div>
+                            <div class="contact-item">
+                                <i class="bi bi-geo-alt"></i>
+                                <span>Musanze, Rwanda</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="footer-bottom d-flex flex-wrap justify-content-between">
+                        <div>&copy; {% now "Y" %} OHIBU — Over Hills Business Unit. All rights reserved.</div>
+                        <div>Designed by AIRAC Ltd.</div>
                     </div>
                 </div>
-                <p class="mb-4" style="color:#7c8797;">
-                    Premium Animal Feed for Healthier Livestock — outstanding
-                    customer service and fast, reliable delivery to keep your farm running smoothly.
-                </p>
-                <div class="footer-social">
-                    <a href="#"><i class="bi bi-linkedin"></i></a>
-                    <a href="#"><i class="bi bi-twitter-x"></i></a>
-                    <a href="#"><i class="bi bi-facebook"></i></a>
-                    <a href="#"><i class="bi bi-whatsapp"></i></a>
-                </div>
-            </div>
-
-            <div class="col-md-2 col-6">
-                <h6 class="footer-heading">Quick Links</h6>
-                <a href="#">Home</a>
-                <a href="#service">Services</a>
-                <a href="#aboutUs">About Us</a>
-                <a href="#reviews">Reviews</a>
-                <a href="#">Contact</a>
-            </div>
-
-            <div class="col-md-3 col-6">
-                <h6 class="footer-heading">Services</h6>
-                <a href="#service">Animal Feed Supply</a>
-                <a href="#service">Livestock Consultation</a>
-                <a href="#service">Fast Delivery</a>
-                <a href="#service">Client Support</a>
-            </div>
-
-            <div class="col-md-3">
-                <h6 class="footer-heading">Contact Us</h6>
-                <div class="contact-item">
-                    <i class="bi bi-envelope"></i>
-                    <span>info@ohiburwanda.com</span>
-                </div>
-                <div class="contact-item">
-                    <i class="bi bi-telephone"></i>
-                    <span>+250 787 xxx xxx</span>
-                </div>
-                <div class="contact-item">
-                    <i class="bi bi-geo-alt"></i>
-                    <span>Musanze, Rwanda</span>
-                </div>
-            </div>
-
-        </div>
-
-        <div class="footer-bottom d-flex flex-wrap justify-content-between">
-            <div>&copy; {% now "Y" %} OHIBU — Over Hills Business Unit. All rights reserved.</div>
-            <div>Designed by AIRAC Ltd.</div>
-        </div>
-    </div>
-</footer>
+            </footer>
 
         </section>
     </div>

@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.template import loader
 from django.contrib.auth.decorators import login_required, permission_required
@@ -17,10 +17,267 @@ from django.db.models import Sum, Count, F, DecimalField, ExpressionWrapper
 from django.db.models.functions import TruncDate, Coalesce
 from django.http import JsonResponse
 from django.shortcuts import render
-from .models import Order, Product, PaymentMethod, PaymentStatus
+from .models import Order, Product, PaymentMethod, PaymentStatus, StockTransferRequest
+from django.core.exceptions import ValidationError
 
 
 
+
+
+@permission_required('product.can_view_dashboard', login_url='/')
+def transfer_stats_data(request):
+    """Counts for the dashboard KPI cards."""
+    counts = StockTransferRequest.objects.values('status').annotate(count=Count('id'))
+    count_map = {c['status']: c['count'] for c in counts}
+
+    rejected = (
+        count_map.get(StockTransferRequest.Status.SOURCE_REJECTED, 0)
+        + count_map.get(StockTransferRequest.Status.ADMIN_REJECTED, 0)
+    )
+    pending_review = (
+        count_map.get(StockTransferRequest.Status.PENDING, 0)
+        + count_map.get(StockTransferRequest.Status.SOURCE_APPROVED, 0)
+    )
+
+    return JsonResponse({
+        "confirmed": count_map.get(StockTransferRequest.Status.ADMIN_APPROVED, 0),
+        "rejected": rejected,
+        "pending": pending_review,
+        "total": StockTransferRequest.objects.count(),
+    })
+
+
+@permission_required('product.can_view_dashboard', login_url='/')
+def transfer_list_data(request):
+    """Full transfer history + separate pending-admin-approval list for the dashboard."""
+    transfers = (
+        StockTransferRequest.objects
+        .select_related('requesting_store', 'source_product__store', 'requested_by')
+        .order_by('-created_at')[:100]
+    )
+
+    def serialize(t):
+        return {
+            "id": t.id,
+            "product": str(t.source_product),
+            "from_store": t.source_product.store.name,
+            "to_store": t.requesting_store.name,
+            "quantity": float(t.requested_quantity),
+            "requested_by": t.requested_by.get_full_name() or t.requested_by.username,
+            "status": t.status,
+            "status_display": t.get_status_display(),
+            "source_review_note": t.source_review_note,
+            "created_at": t.created_at.strftime("%b %d, %Y %H:%M"),
+        }
+
+    all_results = [serialize(t) for t in transfers]
+    pending_admin = [r for r in all_results if r["status"] == StockTransferRequest.Status.SOURCE_APPROVED]
+
+    return JsonResponse({"results": all_results, "pending_admin": pending_admin})
+
+
+def _user_managed_stores(user):
+    """Stores where this user is the manager."""
+    return Store.objects.filter(manager=user)
+
+
+@login_required(login_url='/')
+def transfer_request_create(request):
+    """
+    A store manager (Store B) requests stock from another store (Store A).
+    Only accessible to users who manage at least one store.
+    """
+    managed_stores = _user_managed_stores(request.user)
+    if not managed_stores.exists():
+        messages.error(request, "You must be a store manager to request stock transfers.")
+        return redirect('index')
+
+    if request.method == 'POST':
+        requesting_store_id = request.POST.get('requesting_store')
+        source_product_id = request.POST.get('source_product')
+        requested_quantity = request.POST.get('requested_quantity')
+        reason = request.POST.get('reason', '')
+
+        try:
+            requesting_store = managed_stores.get(pk=requesting_store_id)
+            source_product = Product.objects.select_related('store').get(pk=source_product_id)
+            requested_quantity = float(requested_quantity)
+
+            if requested_quantity <= 0:
+                messages.error(request, "Requested quantity must be greater than 0.")
+            elif source_product.store_id == requesting_store.id:
+                messages.error(request, "You cannot request stock from your own store.")
+            elif requested_quantity > source_product.stock_quantity:
+                messages.error(
+                    request,
+                    f"Only {source_product.stock_quantity} available at {source_product.store.name}."
+                )
+            else:
+                transfer = StockTransferRequest(
+                    requesting_store=requesting_store,
+                    source_product=source_product,
+                    requested_quantity=requested_quantity,
+                    requested_by=request.user,
+                    reason=reason,
+                )
+                transfer.full_clean()
+                transfer.save()
+                messages.success(
+                    request,
+                    f"Transfer request sent to {source_product.store.name}'s manager."
+                )
+                return redirect('my_transfer_requests')
+
+        except Store.DoesNotExist:
+            messages.error(request, "Invalid requesting store.")
+        except Product.DoesNotExist:
+            messages.error(request, "Selected product not found.")
+        except ValidationError as e:
+            messages.error(request, "; ".join(e.messages))
+        except (ValueError, TypeError):
+            messages.error(request, "Invalid quantity.")
+
+    context = {
+        'managed_stores': managed_stores,
+        'other_stores': Store.objects.exclude(id__in=managed_stores.values_list('id', flat=True)),
+    }
+    return render(request, 'transfer_request_form.html', context)
+
+
+@login_required(login_url='/')
+def get_store_products(request, store_id):
+    """AJAX: list in-stock products for a given store, for the transfer request form."""
+    products = (
+        Product.objects
+        .filter(store_id=store_id, stock_quantity__gt=0)
+        .select_related('feed_type', 'feed_type__animal', 'measure')
+    )
+    data = [
+        {
+            'id': p.id,
+            'label': f"{p.feed_type.animal.name} - {p.feed_type.name} - {p.amount}{p.measure.abbreviation or p.measure.name}",
+            'available': float(p.stock_quantity),
+        }
+        for p in products
+    ]
+    return JsonResponse({'products': data})
+
+
+@login_required(login_url='/')
+def my_transfer_requests(request):
+    """
+    Requests the current user made (as a requesting store manager),
+    and requests awaiting the current user's review (as a source store manager).
+    """
+    managed_stores = _user_managed_stores(request.user)
+
+    made_by_me = StockTransferRequest.objects.filter(
+        requested_by=request.user
+    ).select_related('requesting_store', 'source_product__store')
+
+    awaiting_my_review = StockTransferRequest.objects.filter(
+        source_product__store__in=managed_stores,
+        status=StockTransferRequest.Status.PENDING,
+    ).select_related('requesting_store', 'source_product__store')
+
+    context = {
+        'made_by_me': made_by_me,
+        'awaiting_my_review': awaiting_my_review,
+    }
+    return render(request, 'my_transfer_requests.html', context)
+
+
+@login_required(login_url='/')
+def transfer_source_review(request, pk):
+    """Store A manager approves or rejects an incoming request."""
+    transfer = get_object_or_404(StockTransferRequest, pk=pk)
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        note = request.POST.get('note', '')
+
+        try:
+            if action == 'approve':
+                transfer.approve_by_source(request.user, note=note)
+                messages.success(request, "Request approved and forwarded to admin for final approval.")
+            elif action == 'reject':
+                transfer.reject_by_source(request.user, note=note)
+                messages.info(request, "Request rejected.")
+            else:
+                messages.error(request, "Invalid action.")
+        except ValidationError as e:
+            messages.error(request, "; ".join(e.messages))
+
+    return redirect('my_transfer_requests')
+
+
+@staff_member_required
+def admin_transfer_requests(request):
+    """Admin dashboard: requests approved by source store, awaiting final admin approval."""
+    pending_admin = StockTransferRequest.objects.filter(
+        status=StockTransferRequest.Status.SOURCE_APPROVED
+    ).select_related('requesting_store', 'source_product__store', 'requested_by')
+
+    history = StockTransferRequest.objects.exclude(
+        status__in=[StockTransferRequest.Status.PENDING, StockTransferRequest.Status.SOURCE_APPROVED]
+    ).select_related('requesting_store', 'source_product__store')[:50]
+
+    context = {
+        'pending_admin': pending_admin,
+        'history': history,
+    }
+    return render(request, 'admin_transfer_requests.html', context)
+
+
+@staff_member_required
+def admin_transfer_review(request, pk):
+    """Admin gives final approval — this is where stock actually moves."""
+    transfer = get_object_or_404(StockTransferRequest, pk=pk)
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        note = request.POST.get('note', '')
+
+        try:
+            if action == 'approve':
+                transfer.approve_by_admin(request.user, note=note)
+                messages.success(
+                    request,
+                    f"Transfer completed: {transfer.requested_quantity} moved to "
+                    f"{transfer.requesting_store.name}."
+                )
+            elif action == 'reject':
+                transfer.reject_by_admin(request.user, note=note)
+                messages.info(request, "Request rejected by admin.")
+            else:
+                messages.error(request, "Invalid action.")
+        except ValidationError as e:
+            messages.error(request, "; ".join(e.messages))
+
+    return redirect('admin_transfer_requests')
+
+@staff_member_required
+def admin_transfer_action_ajax(request, pk):
+    """Same as admin_transfer_review, but responds with JSON for the dashboard's fetch() call."""
+    if request.method != 'POST':
+        return JsonResponse({"error": "Invalid method"}, status=405)
+
+    transfer = get_object_or_404(StockTransferRequest, pk=pk)
+    action = request.POST.get('action')
+    note = request.POST.get('note', '')
+
+    try:
+        if action == 'approve':
+            transfer.approve_by_admin(request.user, note=note)
+            return JsonResponse({"success": True, "message": "Transfer approved and stock moved."})
+        elif action == 'reject':
+            transfer.reject_by_admin(request.user, note=note)
+            return JsonResponse({"success": True, "message": "Transfer rejected."})
+        else:
+            return JsonResponse({"error": "Invalid action"}, status=400)
+    except ValidationError as e:
+        return JsonResponse({"error": "; ".join(e.messages)}, status=400)
+    
 
 
 @permission_required('product.can_view_dashboard', login_url='/')

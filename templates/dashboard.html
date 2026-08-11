@@ -493,7 +493,7 @@
 </head>
 
 <body>
-
+    {% csrf_token %}
     <div class="shell">
 
         <div class="topbar">
@@ -515,6 +515,7 @@
             <div class="label">Activity</div>
             <button class="nav-item active" data-target="overview"><span class="dot"></span>Overview</button>
             <button class="nav-item" data-target="revenue"><span class="dot"></span>Revenue Trend</button>
+            <button class="nav-item" data-target="transfers"><span class="dot"></span>Stock Transfers</button>
             <button class="nav-item" data-target="paymentStatus"><span class="dot"></span>Payment Status</button>
             <button class="nav-item" data-target="paymentMethod"><span class="dot"></span>Payment Method</button>
             <button class="nav-item" data-target="products"><span class="dot"></span>Top Products</button>
@@ -543,6 +544,18 @@
                 <div class="stat-card">
                     <div class="stat-label">Profit</div>
                     <div class="stat-value" id="statProfit">—</div>
+                </div>
+                <div class="stat-card" id="cardConfirmedTransfers" style="cursor:pointer;">
+                    <div class="stat-label">Confirmed Transfers</div>
+                    <div class="stat-value" id="statConfirmedTransfers">—</div>
+                </div>
+                <div class="stat-card highlight" id="cardRejectedTransfers" style="cursor:pointer;">
+                    <div class="stat-label">Rejected Transfers</div>
+                    <div class="stat-value" id="statRejectedTransfers">—</div>
+                </div>
+                <div class="stat-card highlight" id="cardPendingTransfers" style="cursor:pointer;">
+                    <div class="stat-label">Pending Transfers</div>
+                    <div class="stat-value" id="statPendingTransfers">—</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">Total Orders</div>
@@ -620,6 +633,48 @@
                             </table>
                         </div>
                     </div>
+                    <div class="chart-slot" id="slot-transfers">
+                        <h3 style="font-size:14px; color:var(--text-muted); margin-bottom:10px;">Awaiting Your Approval
+                        </h3>
+                        <div class="stock-table-wrap" style="max-height:220px; margin-bottom:20px;">
+                            <table class="stock-table" id="pendingTransferTable">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>From</th>
+                                        <th>To</th>
+                                        <th>Qty</th>
+                                        <th>Requested By</th>
+                                        <th>Source Note</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pendingTransferTableBody">
+                                    <tr>
+                                        <td colspan="7">Loading…</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h3 style="font-size:14px; color:var(--text-muted); margin-bottom:10px;">All Transfers</h3>
+                        <div class="stock-table-wrap">
+                            <table class="stock-table" id="transferTable">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>From</th>
+                                        <th>To</th>
+                                        <th>Qty</th>
+                                        <th>Requested By</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transferTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
                     <div class="chart-slot" id="slot-models">
                         <div class="model-grid" id="modelGrid"></div>
                     </div>
@@ -640,6 +695,10 @@
 
         let sourceData = { revenue: null, products: null, status: null, customers: null };
         let chartInstances = {};
+
+        function getCsrfToken() {
+            return document.querySelector('[name=csrfmiddlewaretoken]').value;
+        }
 
         function fmtMoney(n) {
             n = Number(n) || 0;
@@ -816,6 +875,97 @@
             renderPaymentStatCards('paymentMethodStats', data);
         });
 
+        fetch("{% url 'transfer_stats_data' %}").then(r => r.json()).then(data => {
+            document.getElementById('statConfirmedTransfers').textContent = fmtMoney(data.confirmed);
+            document.getElementById('statRejectedTransfers').textContent = fmtMoney(data.rejected);
+            document.getElementById('statPendingTransfers').textContent = fmtMoney(data.pending);
+        });
+
+        function loadTransferData() {
+            fetch("{% url 'transfer_list_data' %}").then(r => r.json()).then(data => {
+                // Full history table
+                const tbody = document.getElementById('transferTableBody');
+                tbody.innerHTML = '';
+                (data.results || []).forEach(row => {
+                    let statusClass = 'low';
+                    if (row.status === 'ADMIN_APPROVED') statusClass = 'ok';
+                    else if (row.status === 'SOURCE_REJECTED' || row.status === 'ADMIN_REJECTED') statusClass = 'out';
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                <td>${row.product}</td>
+                <td>${row.from_store}</td>
+                <td>${row.to_store}</td>
+                <td>${row.quantity}</td>
+                <td>${row.requested_by}</td>
+                <td><span class="status-pill ${statusClass}">${row.status_display}</span></td>
+                <td>${row.created_at}</td>
+            `;
+                    tbody.appendChild(tr);
+                });
+
+                // Pending admin approval table (actionable)
+                const pendingBody = document.getElementById('pendingTransferTableBody');
+                pendingBody.innerHTML = '';
+                const pending = data.pending_admin || [];
+
+                if (pending.length === 0) {
+                    pendingBody.innerHTML = '<tr><td colspan="7">Nothing awaiting approval.</td></tr>';
+                    return;
+                }
+
+                pending.forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                <td>${row.product}</td>
+                <td>${row.from_store}</td>
+                <td>${row.to_store}</td>
+                <td>${row.quantity}</td>
+                <td>${row.requested_by}</td>
+                <td>${row.source_review_note || '—'}</td>
+                <td>
+                    <button class="status-pill ok" style="cursor:pointer; border:none;" data-id="${row.id}" data-action="approve">Approve</button>
+                    <button class="status-pill out" style="cursor:pointer; border:none;" data-id="${row.id}" data-action="reject">Reject</button>
+                </td>
+            `;
+                    pendingBody.appendChild(tr);
+                });
+
+                // Wire up buttons
+                pendingBody.querySelectorAll('button[data-action]').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const id = this.dataset.id;
+                        const action = this.dataset.action;
+
+                        fetch(`/dashboard/transfer-action/${id}/`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': getCsrfToken(),
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: `action=${action}`,
+                        }).then(r => r.json()).then(res => {
+                            if (res.success) {
+                                loadTransferData(); // refresh both tables
+                                fetch("{% url 'transfer_stats_data' %}").then(r => r.json()).then(d => {
+                                    document.getElementById('statConfirmedTransfers').textContent = fmtMoney(d.confirmed);
+                                    document.getElementById('statRejectedTransfers').textContent = fmtMoney(d.rejected);
+                                    document.getElementById('statPendingTransfers').textContent = fmtMoney(d.pending);
+                                });
+                            } else {
+                                alert(res.error || 'Something went wrong.');
+                            }
+                        });
+                    });
+                });
+            }).catch(() => {
+                document.getElementById('transferTableBody').innerHTML =
+                    '<tr><td colspan="7">Transfer data unavailable.</td></tr>';
+            });
+        }
+
+        loadTransferData();
+
         // ---------- model summary (counts per model) ----------
         fetch("{% url 'model_summary_data' %}").then(r => r.json()).then(data => {
             const grid = document.getElementById('modelGrid');
@@ -872,6 +1022,7 @@
             customers: ['Top Customers', 'Ranked by revenue'],
             stock: ['Stock & Consumption', 'Daily usage & estimated stockout'],
             models: ['Model Summary', 'Record counts across all models'],
+            transfers: ['Stock Transfers', 'Confirmed, rejected & pending transfer requests'],
         };
 
         function switchPanel(target) {
@@ -899,6 +1050,9 @@
         document.getElementById('cardPendingOrders').addEventListener('click', () => {
             window.location.href = '/admin/product/order/?status__exact=pending';
         });
+        document.getElementById('cardConfirmedTransfers').addEventListener('click', () => switchPanel('transfers'));
+        document.getElementById('cardRejectedTransfers').addEventListener('click', () => switchPanel('transfers'));
+        document.getElementById('cardPendingTransfers').addEventListener('click', () => switchPanel('transfers'));
     </script>
 
 </body>

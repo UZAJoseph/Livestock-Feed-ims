@@ -6,6 +6,15 @@ from django.conf.urls.static import static
 
 
 urlpatterns = [
+    path('dashboard/transfer-action/<int:pk>/', views.admin_transfer_action_ajax, name='admin_transfer_action_ajax'),
+    path('dashboard/transfer-stats/', views.transfer_stats_data, name='transfer_stats_data'),
+path('dashboard/transfer-list/', views.transfer_list_data, name='transfer_list_data'),
+    path('transfer/request/', views.transfer_request_create, name='transfer_request_create'),
+path('transfer/store-products/<int:store_id>/', views.get_store_products, name='get_store_products'),
+path('transfer/my-requests/', views.my_transfer_requests, name='my_transfer_requests'),
+path('transfer/source-review/<int:pk>/', views.transfer_source_review, name='transfer_source_review'),
+path('transfer/admin/', views.admin_transfer_requests, name='admin_transfer_requests'),
+path('transfer/admin-review/<int:pk>/', views.admin_transfer_review, name='admin_transfer_review'),
     path('password-reset/', auth_views.PasswordResetView.as_view(
         template_name='registration/password_reset_form.html',
         email_template_name='registration/password_reset_email.html',
@@ -37,7 +46,6 @@ urlpatterns = [
     path('register/', views.register_view, name='register'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
-    path('index/', views.home, name='home'),
     path('feeds/', views.feed_selector_page, name='feed_selector_page'),
     path('reports/', views.reports_dashboard, name='reports_dashboard'),
     path('feeds/animal/<int:animal_id>/feed-types/', views.get_feed_types, name='get_feed_types'),

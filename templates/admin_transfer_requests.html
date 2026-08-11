@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row pt-4">
+    <div class="col-12 text-center mb-3">
+        <h4 class="text-white">Transfer Requests — Admin Approval</h4>
+    </div>
+</div>
+
+{% if messages %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="row pt-2">
+    <div class="col-12">
+        <div class="card glass-card">
+            <div class="card-header text-center"><b>Awaiting Final Approval</b></div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-borderless align-middle mb-0" style="color:white;">
+                        <thead>
+                            <tr>
+                                <th>Requesting Store</th>
+                                <th>Source Store</th>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Requested By</th>
+                                <th>Source Manager Note</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in pending_admin %}
+                            <tr>
+                                <td>{{ req.requesting_store.name }}</td>
+                                <td>{{ req.source_product.store.name }}</td>
+                                <td>{{ req.source_product }}</td>
+                                <td>{{ req.requested_quantity }}</td>
+                                <td>{{ req.requested_by.get_full_name|default:req.requested_by.username }}</td>
+                                <td>{{ req.source_review_note|default:"—" }}</td>
+                                <td>
+                                    <form method="post" action="{% url 'admin_transfer_review' req.pk %}" class="d-flex gap-1">
+                                        {% csrf_token %}
+                                        <button type="submit" name="action" value="approve"
+                                            class="btn btn-sm btn-success">Approve</button>
+                                        <button type="submit" name="action" value="reject"
+                                            class="btn btn-sm btn-danger">Reject</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="7" class="text-center">Nothing awaiting approval.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row pt-3 pb-4">
+    <div class="col-12">
+        <div class="card glass-card">
+            <div class="card-header text-center"><b>Recent History</b></div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-borderless align-middle mb-0" style="color:white;">
+                        <thead>
+                            <tr>
+                                <th>Requesting Store</th>
+                                <th>Source Store</th>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Status</th>
+                                <th>Updated</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in history %}
+                            <tr>
+                                <td>{{ req.requesting_store.name }}</td>
+                                <td>{{ req.source_product.store.name }}</td>
+                                <td>{{ req.source_product }}</td>
+                                <td>{{ req.requested_quantity }}</td>
+                                <td>
+                                    {% if req.status == 'ADMIN_APPROVED' %}
+                                    <span class="badge bg-success">{{ req.get_status_display }}</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">{{ req.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ req.updated_at|date:"M d, Y H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="6" class="text-center">No history yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row pt-4">
+    <div class="col-12 text-center mb-3">
+        <h4 class="text-white">Stock Transfer Requests</h4>
+        <a href="{% url 'transfer_request_create' %}" class="btn btn-primary btn-sm">+ New Request</a>
+    </div>
+</div>
+
+{% if messages %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if awaiting_my_review %}
+<div class="row pt-3">
+    <div class="col-12">
+        <div class="card glass-card">
+            <div class="card-header text-center"><b>Requests Awaiting Your Review</b></div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle mb-0">
+                        <thead class="table-info">
+                            <tr>
+                                <th>Requested By</th>
+                                <th>Requesting Store</th>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Reason</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in awaiting_my_review %}
+                            <tr>
+                                <td>{{ req.requested_by.get_full_name|default:req.requested_by.username }}</td>
+                                <td>{{ req.requesting_store.name }}</td>
+                                <td>{{ req.source_product }}</td>
+                                <td>{{ req.requested_quantity }}</td>
+                                <td>{{ req.reason|default:"—" }}</td>
+                                <td>
+                                    <form method="post" action="{% url 'transfer_source_review' req.pk %}" class="d-flex gap-1">
+                                        {% csrf_token %}
+                                        <button type="submit" name="action" value="approve"
+                                            class="btn btn-sm btn-success">Approve</button>
+                                        <button type="submit" name="action" value="reject"
+                                            class="btn btn-sm btn-danger">Reject</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row pt-3 pb-4">
+    <div class="col-12">
+        <div class="card glass-card">
+            <div class="card-header text-center"><b>My Requests</b></div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle mb-0">
+                        <thead class="table-info">
+                            <tr>
+                                <th>Source Store</th>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Status</th>
+                                <th>Note</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in made_by_me %}
+                            <tr>
+                                <td>{{ req.source_product.store.name }}</td>
+                                <td>{{ req.source_product }}</td>
+                                <td>{{ req.requested_quantity }}</td>
+                                <td>
+                                    {% if req.status == 'PENDING' %}
+                                    <span class="badge bg-warning text-dark">{{ req.get_status_display }}</span>
+                                    {% elif req.status == 'SOURCE_APPROVED' %}
+                                    <span class="badge bg-info text-dark">{{ req.get_status_display }}</span>
+                                    {% elif req.status == 'ADMIN_APPROVED' %}
+                                    <span class="badge bg-success">{{ req.get_status_display }}</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">{{ req.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ req.source_review_note|default:req.admin_review_note|default:"—" }}</td>
+                                <td>{{ req.created_at|date:"M d, Y H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="6" class="text-center">No requests yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .glass-card {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        border-radius: 12px;
+    }
+
+    .glass-card .card-header {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .glass-card .table {
+        color: white;
+        background: transparent;
+    }
+
+    .glass-card .table > :not(caption) > * > * {
+        background: transparent;
+        color: white;
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .glass-card .table-info {
+        background: rgba(255, 255, 255, 0.15) !important;
+    }
+
+    .glass-card .table-striped > tbody > tr:nth-of-type(odd) > * {
+        background: rgba(255, 255, 255, 0.08);
+        color: white;
+    }
+
+    .glass-card .table-hover > tbody > tr:hover > * {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .glass-card .form-select,
+    .glass-card select {
+        background-color: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+    }
+
+    .glass-card .form-select:focus,
+    .glass-card select:focus {
+        background-color: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.5);
+        color: white;
+        box-shadow: none;
+    }
+
+    .glass-card .form-select option,
+    .glass-card select option {
+        color: black;
+    }
+</style>
+{% endblock %}

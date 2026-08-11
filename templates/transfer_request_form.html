@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row justify-content-center pt-4 pb-5">
+    <div class="col-md-7">
+        <div class="card glass-card">
+            <div class="card-header text-center">
+                <b>Request Stock Transfer</b>
+            </div>
+            <div class="card-body">
+                {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Requesting Store (your store)</label>
+                            <select name="requesting_store" id="requestingStore" class="form-select" required>
+                                <option value="" disabled selected>-- Select your store --</option>
+                                {% for store in managed_stores %}
+                                <option value="{{ store.id }}">{{ store.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Source Store (request from)</label>
+                            <select name="source_store" id="sourceStore" class="form-select" required>
+                                <option value="" disabled selected>-- Select store to request from --</option>
+                                {% for store in other_stores %}
+                                <option value="{{ store.id }}">{{ store.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Product</label>
+                            <select name="source_product" id="sourceProduct" class="form-select" required disabled>
+                                <option value="" selected>-- Select a store first --</option>
+                            </select>
+                            <div class="form-text text-white-50" id="availableStockText"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Requested Quantity</label>
+                            <input type="number" step="0.01" min="0.01" name="requested_quantity"
+                                class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Reason (optional)</label>
+                        <textarea name="reason" class="form-control" rows="2"
+                            placeholder="e.g. Running low, high customer demand this week"></textarea>
+                    </div>
+
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary">Submit Request</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .glass-card .form-label {
+        color: white;
+    }
+
+    .glass-card .form-control,
+    .glass-card .form-select {
+        background-color: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+    }
+
+    .glass-card .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .glass-card .form-control:focus,
+    .glass-card .form-select:focus {
+        background-color: rgba(255, 255, 255, 0.18);
+        border-color: rgba(255, 255, 255, 0.5);
+        color: white;
+        box-shadow: none;
+    }
+
+    .glass-card .form-select:disabled {
+        background-color: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* Native dropdown popups can't be blurred cross-browser, so the
+       option list itself stays readable on a solid dark background */
+    .glass-card .form-select option {
+        background-color: #3a3560;
+        color: white;
+    }
+
+    .glass-card .form-select option:disabled {
+        color: rgba(255, 255, 255, 0.5);
+    }
+</style>
+
+<script>
+document.getElementById('sourceStore').addEventListener('change', function () {
+    const storeId = this.value;
+    const productSelect = document.getElementById('sourceProduct');
+    const stockText = document.getElementById('availableStockText');
+
+    productSelect.innerHTML = '<option value="" selected>Loading...</option>';
+    productSelect.disabled = true;
+    stockText.textContent = '';
+
+    fetch(`/transfer/store-products/${storeId}/`)
+        .then(res => res.json())
+        .then(data => {
+            productSelect.innerHTML = '';
+            if (data.products.length === 0) {
+                productSelect.innerHTML = '<option value="" selected>No products in stock</option>';
+                return;
+            }
+            productSelect.innerHTML = '<option value="" disabled selected>-- Select a product --</option>';
+            data.products.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = `${p.label} (${p.available} available)`;
+                opt.dataset.available = p.available;
+                productSelect.appendChild(opt);
+            });
+            productSelect.disabled = false;
+        });
+});
+
+document.getElementById('sourceProduct').addEventListener('change', function () {
+    const selected = this.options[this.selectedIndex];
+    const stockText = document.getElementById('availableStockText');
+    if (selected && selected.dataset.available) {
+        stockText.textContent = `Available: ${selected.dataset.available}`;
+    }
+});
+</script>
+{% endblock %}

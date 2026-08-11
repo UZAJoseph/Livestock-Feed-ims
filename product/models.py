@@ -11,6 +11,150 @@ from django.contrib.auth.models import User
 
 #add model
 
+class StockTransferRequest(models.Model):
+
+    class Status(models.TextChoices):
+        PENDING = 'PENDING', 'Pending Source Store Review'
+        SOURCE_APPROVED = 'SOURCE_APPROVED', 'Approved by Source Store Manager'
+        SOURCE_REJECTED = 'SOURCE_REJECTED', 'Rejected by Source Store Manager'
+        ADMIN_APPROVED = 'ADMIN_APPROVED', 'Approved by Admin (Completed)'
+        ADMIN_REJECTED = 'ADMIN_REJECTED', 'Rejected by Admin'
+
+    # Store B — the one that needs stock
+    requesting_store = models.ForeignKey(
+        'Store', on_delete=models.CASCADE, related_name='transfer_requests_made'
+    )
+    # Store A — the one that currently holds the stock
+    source_product = models.ForeignKey(
+        'Product', on_delete=models.CASCADE, related_name='transfer_requests_received',
+        help_text="The specific Product row (store + feed type + amount + measure) being requested from"
+    )
+
+    requested_quantity = models.DecimalField(
+        max_digits=10, decimal_places=2, validators=[MinValueValidator(0.01)]
+    )
+
+    requested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='transfer_requests_created'
+    )
+    reason = models.CharField(max_length=255, blank=True)
+
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+
+    # Step 1: source store manager's decision
+    source_reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='transfer_requests_source_reviewed'
+    )
+    source_reviewed_at = models.DateTimeField(null=True, blank=True)
+    source_review_note = models.CharField(max_length=255, blank=True)
+
+    # Step 2: admin's final decision
+    admin_reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='transfer_requests_admin_reviewed'
+    )
+    admin_reviewed_at = models.DateTimeField(null=True, blank=True)
+    admin_review_note = models.CharField(max_length=255, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return (f"{self.requesting_store.name} requests "
+                f"{self.requested_quantity} of {self.source_product} "
+                f"[{self.get_status_display()}]")
+
+    # ---------- Validation ----------
+    def clean(self):
+        if self.source_product.store_id == self.requesting_store_id:
+            raise ValidationError("A store cannot request stock from itself.")
+
+    # ---------- Workflow transitions ----------
+
+    def approve_by_source(self, user, note=""):
+        """Store A's manager agrees to release the stock (doesn't move stock yet)."""
+        if self.status != self.Status.PENDING:
+            raise ValidationError("Only pending requests can be approved by the source store.")
+        if self.source_product.store.manager_id != user.id:
+            raise ValidationError("Only the source store's manager can approve this request.")
+        if self.requested_quantity > self.source_product.stock_quantity:
+            raise ValidationError("Requested quantity exceeds available stock.")
+
+        self.status = self.Status.SOURCE_APPROVED
+        self.source_reviewed_by = user
+        self.source_reviewed_at = timezone.now()
+        self.source_review_note = note
+        self.save()
+
+    def reject_by_source(self, user, note=""):
+        if self.status != self.Status.PENDING:
+            raise ValidationError("Only pending requests can be rejected by the source store.")
+        if self.source_product.store.manager_id != user.id:
+            raise ValidationError("Only the source store's manager can reject this request.")
+
+        self.status = self.Status.SOURCE_REJECTED
+        self.source_reviewed_by = user
+        self.source_reviewed_at = timezone.now()
+        self.source_review_note = note
+        self.save()
+
+    @transaction.atomic
+    def approve_by_admin(self, user, note=""):
+        """
+        Final approval: actually moves the stock between stores.
+        No money changes hands — only stock_quantity is adjusted.
+        """
+        if self.status != self.Status.SOURCE_APPROVED:
+            raise ValidationError("Only source-approved requests can receive final admin approval.")
+
+        # Lock the source row to avoid race conditions with concurrent transfers/orders
+        source = Product.objects.select_for_update().get(pk=self.source_product_id)
+
+        if self.requested_quantity > source.stock_quantity:
+            raise ValidationError("Requested quantity exceeds current available stock.")
+
+        # Reduce source stock
+        source.stock_quantity -= self.requested_quantity
+        source.save(update_fields=['stock_quantity'])
+
+        # Find or create the matching Product row at the requesting store
+        destination, created = Product.objects.select_for_update().get_or_create(
+            store=self.requesting_store,
+            feed_type=source.feed_type,
+            amount=source.amount,
+            measure=source.measure,
+            defaults={
+                'cost': source.cost,
+                'default_price': source.default_price,
+                'stock_quantity': 0,
+                'reorder_level': source.reorder_level,
+            }
+        )
+        destination.stock_quantity += self.requested_quantity
+        destination.save(update_fields=['stock_quantity'])
+
+        self.status = self.Status.ADMIN_APPROVED
+        self.admin_reviewed_by = user
+        self.admin_reviewed_at = timezone.now()
+        self.admin_review_note = note
+        self.save()
+
+    def reject_by_admin(self, user, note=""):
+        if self.status != self.Status.SOURCE_APPROVED:
+            raise ValidationError("Only source-approved requests can be rejected by admin.")
+
+        self.status = self.Status.ADMIN_REJECTED
+        self.admin_reviewed_by = user
+        self.admin_reviewed_at = timezone.now()
+        self.admin_review_note = note
+        self.save()
+
+
+
 class Review(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
     feed_type = models.ForeignKey(
