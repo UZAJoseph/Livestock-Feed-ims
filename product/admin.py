@@ -10,11 +10,24 @@ from django.core.exceptions import ValidationError
 from .models import (
     District, Sector, Store, Store, FeedType, Animal,
     Measure, Product, Order, Sale, SaleItem, PaymentMethod,
-    PaymentStatus, Restock
+    PaymentStatus, Restock, BookingSettings
 )
 from unfold.admin import ModelAdmin
 
+
+
+
 # Register your models here.
+
+@admin.register(BookingSettings)
+class BookingSettingsAdmin(admin.ModelAdmin):
+    list_display = ('min_booking_days', 'max_booking_days', 'payment_reminder_hours', 'updated_at')
+
+    def has_add_permission(self, request):
+        return not BookingSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 @admin.register(Restock)
 class RestockAdmin(admin.ModelAdmin):

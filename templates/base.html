@@ -222,7 +222,9 @@
                             </ul>
                         </li>
                         {% endif %}
-
+                        {% if request.user.is_authenticated %}
+    <a href="{% url 'client_dashboard' %}" class="nav-link">My Orders</a>
+{% endif %}
 
                         {% if user.is_authenticated and perms.product.can_view_dashboard %}
                         <li class="nav-item">
@@ -336,7 +338,7 @@
                             {% else %}
                             <a href="#" class="btn btn-primary" onclick="markOrderIntent('now')" data-bs-toggle="modal"
                                 data-bs-target="#authModal">Order Now</a>
-                            <a href="#" class="btn btn-warning" onclick="markOrderIntent('book')" data-bs-toggle="modal"
+                            <a href="#" class="btn btn-secondary" onclick="markOrderIntent('book')" data-bs-toggle="modal"
                                 data-bs-target="#authModal">Book Now</a>
                             {% endif %}
                         </div>

@@ -1,0 +1,570 @@
+<!-- client_dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg-deep: #120a1f;
+            --bg-mid: #1f1130;
+            --glass-fill: rgba(255, 255, 255, 0.05);
+            --glass-fill-hover: rgba(255, 255, 255, 0.09);
+            --glass-border: rgba(255, 255, 255, 0.14);
+            --accent: #9256c9;
+            --accent-soft: #c9a0d6;
+            --text-primary: #ffffff;
+            --text-muted: rgba(255, 255, 255, 0.58);
+            --text-faint: rgba(255, 255, 255, 0.38);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, Helvetica, Arial, sans-serif;
+            color: var(--text-primary);
+            background:
+                radial-gradient(ellipse 900px 600px at 8% -10%, rgba(122, 63, 174, 0.35), transparent 60%),
+                radial-gradient(ellipse 800px 700px at 105% 15%, rgba(146, 86, 201, 0.22), transparent 55%),
+                radial-gradient(ellipse 700px 500px at 50% 110%, rgba(74, 31, 107, 0.35), transparent 60%),
+                linear-gradient(160deg, #17091f 0%, #120a1f 45%, #0d0817 100%);
+            background-attachment: fixed;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Sora', 'Inter', sans-serif;
+            margin: 0;
+        }
+
+        .shell {
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+            padding: 28px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 24px;
+            border-radius: 16px;
+            background: var(--glass-fill);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .topbar .eyebrow {
+            font-size: 12px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--accent-soft);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .topbar h1 {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .topbar-link {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--accent-soft);
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.03);
+            transition: background 0.15s ease, color 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .topbar-link:hover {
+            background: var(--glass-fill-hover);
+            color: var(--text-primary);
+        }
+
+        /* ---------- Urgent payment banner ---------- */
+        .urgent-banner {
+            display: none;
+            padding: 16px 20px;
+            border-radius: 14px;
+            background: rgba(201, 86, 86, 0.16);
+            border: 1px solid rgba(214, 131, 131, 0.4);
+            color: #f0c9c9;
+            font-size: 14px;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .urgent-banner.active {
+            display: flex;
+        }
+
+        .urgent-banner strong {
+            color: #ffffff;
+        }
+
+        /* ---------- Stats ---------- */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 16px;
+        }
+
+        .stat-card {
+            border-radius: 16px;
+            background: var(--glass-fill);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 16px 18px;
+        }
+
+        .stat-card.highlight {
+            background: rgba(201, 146, 86, 0.14);
+            border-color: rgba(214, 179, 131, 0.4);
+        }
+
+        .stat-card.highlight .stat-label {
+            color: #d6b383;
+        }
+
+        .stat-card.highlight .stat-value {
+            color: #f0d9b3;
+        }
+
+        .stat-card.danger {
+            background: rgba(201, 86, 86, 0.14);
+            border-color: rgba(214, 131, 131, 0.4);
+        }
+
+        .stat-card.danger .stat-label {
+            color: #d68383;
+        }
+
+        .stat-card.danger .stat-value {
+            color: #f0c9c9;
+        }
+
+        .stat-card .stat-label {
+            font-size: 12px;
+            color: var(--text-faint);
+            margin-bottom: 8px;
+        }
+
+        .stat-card .stat-value {
+            font-family: 'Sora', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        /* ---------- Charts row ---------- */
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .panel {
+            border-radius: 18px;
+            background: var(--glass-fill);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 18px 20px 22px;
+            min-height: 260px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .chart-holder {
+            position: relative;
+            flex: 1;
+            min-height: 200px;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* ---------- Orders table ---------- */
+        .orders-panel {
+            border-radius: 18px;
+            background: var(--glass-fill);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 20px 22px 24px;
+        }
+
+        .orders-panel h2 {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .orders-table-wrap {
+            overflow-x: auto;
+        }
+
+        .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            min-width: 720px;
+        }
+
+        .orders-table thead th {
+            text-align: left;
+            padding: 10px 12px;
+            font-size: 11px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--text-faint);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .orders-table tbody td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+        }
+
+        .orders-table tbody tr.urgent {
+            background: rgba(201, 86, 86, 0.08);
+        }
+
+        .orders-table tbody tr:hover {
+            background: var(--glass-fill-hover);
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .status-pill.confirmed {
+            background: rgba(146, 201, 156, 0.15);
+            color: #a0d6b3;
+        }
+
+        .status-pill.pending {
+            background: rgba(201, 146, 86, 0.18);
+            color: #d6b383;
+        }
+
+        .status-pill.cancelled {
+            background: rgba(201, 86, 86, 0.18);
+            color: #d68383;
+        }
+
+        .type-pill {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(146, 86, 201, 0.18);
+            color: var(--accent-soft);
+        }
+
+        .pay-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(201, 86, 86, 0.22);
+            color: #f0c9c9;
+        }
+
+        .empty-note {
+            color: var(--text-faint);
+            font-size: 13px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        @media (max-width: 800px) {
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    {% csrf_token %}
+    <div class="shell">
+
+        <div class="topbar">
+            <div>
+                <div class="eyebrow">My Account</div>
+                <h1>My Orders & Bookings</h1>
+            </div>
+            <a href="{% url 'index' %}" class="topbar-link">← Back to Site</a>
+        </div>
+
+        <div class="urgent-banner" id="urgentBanner">
+            <span>⚠️</span>
+            <span><strong id="urgentCount">0</strong> booking(s) need payment soon so we can proceed. Please contact us
+                to complete payment.</span>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card danger" id="cardCountdown" style="display:none;">
+                <div class="stat-label">Next Payment Deadline</div>
+                <div class="stat-value" id="countdownValue" style="font-size:18px;">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Orders</div>
+                <div class="stat-value" id="statTotal">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Confirmed</div>
+                <div class="stat-value" id="statConfirmed">—</div>
+            </div>
+            <div class="stat-card highlight">
+                <div class="stat-label">Pending</div>
+                <div class="stat-value" id="statPending">—</div>
+            </div>
+            <div class="stat-card danger">
+                <div class="stat-label">Cancelled</div>
+                <div class="stat-value" id="statCancelled">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Spent</div>
+                <div class="stat-value" id="statSpent">—</div>
+            </div>
+            <div class="stat-card danger" id="cardNeedsPayment">
+                <div class="stat-label">Needs Payment Soon</div>
+                <div class="stat-value" id="statNeedsPayment">—</div>
+            </div>
+        </div>
+
+        <div class="charts-row">
+            <div class="panel">
+                <h3>Payment Status</h3>
+                <div class="chart-holder"><canvas id="paymentStatusChart"></canvas></div>
+            </div>
+            <div class="panel">
+                <h3>Payment Method</h3>
+                <div class="chart-holder"><canvas id="paymentMethodChart"></canvas></div>
+            </div>
+        </div>
+
+        <div class="orders-panel">
+            <h2>Order History</h2>
+            <div class="orders-table-wrap">
+                <table class="orders-table" id="ordersTable">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Qty</th>
+                            <th>Total (RWF)</th>
+                            <th>Type</th>
+                            <th>Requested Date</th>
+                            <th>Status</th>
+                            <th>Payment</th>
+                            <th>Placed On</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                        <tr>
+                            <td colspan="8" class="empty-note">Loading your orders…</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        Chart.defaults.color = 'rgba(255,255,255,0.65)';
+        Chart.defaults.borderColor = 'rgba(255,255,255,0.08)';
+        Chart.defaults.font.family = "'Inter', sans-serif";
+
+        function fmtMoney(n) {
+            n = Number(n) || 0;
+            return n.toLocaleString(undefined, { maximumFractionDigits: 0 });
+        }
+
+        function buildPie(ctx, labels, counts) {
+            if (!labels.length) return null;
+            return new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: ['#9256c9', '#c9a0d6', '#7a3fae', '#4a1f6b', '#b383bf', '#e6c9f0'],
+                        borderColor: 'rgba(18, 10, 31, 0.6)',
+                        borderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12 } } }
+                }
+            });
+        }
+
+        function statusPillClass(statusRaw) {
+            if (statusRaw === 'confirmed') return 'confirmed';
+            if (statusRaw === 'cancelled') return 'cancelled';
+            return 'pending';
+        }
+
+        function formatCountdown(ms) {
+            if (ms <= 0) return 'Payment needed now';
+            const totalSeconds = Math.floor(ms / 1000);
+            const days = Math.floor(totalSeconds / 86400);
+            const hours = Math.floor((totalSeconds % 86400) / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+
+            if (days > 0) return `${days}d ${hours}h ${minutes}m left to pay`;
+            if (hours > 0) return `${hours}h ${minutes}m ${seconds}s left to pay`;
+            return `${minutes}m ${seconds}s left to pay`;
+        }
+
+        function startCountdowns(orders) {
+            // Every pending booking has a payment_deadline (requested_date minus
+            // payment_reminder_hours) — countdown runs from the moment it's booked,
+            // not just once it's already urgent.
+            const bookings = orders.filter(o => o.payment_deadline);
+            if (!bookings.length) return;
+
+            const deadlines = bookings.map(o => new Date(o.payment_deadline).getTime());
+            const soonestDeadline = Math.min(...deadlines);
+
+            const countdownCard = document.getElementById('cardCountdown');
+            const countdownValue = document.getElementById('countdownValue');
+            countdownCard.style.display = 'block';
+
+            function tick() {
+                const now = Date.now();
+
+                // Top summary card — soonest deadline across all pending bookings
+                countdownValue.textContent = formatCountdown(soonestDeadline - now);
+
+                // Per-row countdowns — once a row's countdown hits zero, flag it urgent live
+                document.querySelectorAll('.pay-badge[data-deadline]').forEach(badge => {
+                    const deadline = new Date(badge.dataset.deadline).getTime();
+                    const remaining = deadline - now;
+                    badge.textContent = formatCountdown(remaining);
+
+                    const row = badge.closest('tr');
+                    if (row && remaining <= 0) {
+                        row.classList.add('urgent');
+                    }
+                });
+            }
+
+            tick();
+            setInterval(tick, 1000);
+        }
+
+        fetch("{% url 'client_dashboard_data' %}")
+            .then(r => r.json())
+            .then(data => {
+                const s = data.stats;
+                document.getElementById('statTotal').textContent = fmtMoney(s.total_orders);
+                document.getElementById('statConfirmed').textContent = fmtMoney(s.confirmed);
+                document.getElementById('statPending').textContent = fmtMoney(s.pending);
+                document.getElementById('statCancelled').textContent = fmtMoney(s.cancelled);
+                document.getElementById('statSpent').textContent = fmtMoney(s.total_spent);
+                document.getElementById('statNeedsPayment').textContent = fmtMoney(s.needs_payment_soon);
+
+                if (s.needs_payment_soon > 0) {
+                    document.getElementById('urgentBanner').classList.add('active');
+                    document.getElementById('urgentCount').textContent = s.needs_payment_soon;
+                }
+
+                buildPie(document.getElementById('paymentStatusChart'), data.payment_status.labels, data.payment_status.counts);
+                buildPie(document.getElementById('paymentMethodChart'), data.payment_method.labels, data.payment_method.counts);
+
+                const tbody = document.getElementById('ordersTableBody');
+                tbody.innerHTML = '';
+
+                if (!data.orders.length) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="empty-note">You have not placed any orders yet.</td></tr>';
+                    return;
+                }
+
+                data.orders.forEach(o => {
+                    const tr = document.createElement('tr');
+                    if (o.needs_payment_soon) tr.classList.add('urgent');
+
+                    let paymentCell;
+                    if (o.payment_status) {
+                        paymentCell = o.payment_status;
+                    } else if (o.payment_deadline) {
+                        paymentCell = `<span class="pay-badge" data-deadline="${o.payment_deadline}">Calculating…</span>`;
+                    } else {
+                        paymentCell = '—';
+                    }
+
+                    tr.innerHTML = `
+                        <td>${o.product}</td>
+                        <td>${o.quantity}</td>
+                        <td>${fmtMoney(o.total_price)}</td>
+                        <td><span class="type-pill">${o.order_type}</span></td>
+                        <td>${o.requested_date ?? '—'}</td>
+                        <td><span class="status-pill ${statusPillClass(o.status_raw)}">${o.status}</span></td>
+                        <td>${paymentCell}</td>
+                        <td>${o.created_at}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                startCountdowns(data.orders);
+            })
+            .catch(() => {
+                document.getElementById('ordersTableBody').innerHTML =
+                    '<tr><td colspan="8" class="empty-note">Could not load your orders. Please refresh.</td></tr>';
+            });
+    </script>
+
+</body>
+
+</html>

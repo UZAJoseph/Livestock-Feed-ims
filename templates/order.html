@@ -533,17 +533,17 @@
         setupOrderModal('now', true);
         setupOrderModal('book', false);
 
-        // -------------------------
-        // Book Now: date field min/max (5–21 days out)
+       // -------------------------
+        // Book Now: date field min/max — pulled from BookingSettings via context
         // -------------------------
         const dateInput = document.getElementById('id_requested_date');
         const bookingWindowText = document.getElementById('bookingWindowText');
         if (dateInput) {
             const today = new Date();
             const earliest = new Date(today);
-            earliest.setDate(today.getDate() + 5);
+            earliest.setDate(today.getDate() + {{ min_booking_days }});
             const latest = new Date(today);
-            latest.setDate(today.getDate() + 21);
+            latest.setDate(today.getDate() + {{ max_booking_days }});
 
             const fmt = d => d.toISOString().split('T')[0];
             dateInput.min = fmt(earliest);
@@ -552,5 +552,6 @@
             const display = d => d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
             bookingWindowText.textContent = `Choose a date between ${display(earliest)} and ${display(latest)}.`;
         }
+        
     });
 </script>

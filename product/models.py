@@ -11,6 +11,49 @@ from datetime import timedelta
 
 #add model
 
+class BookingSettings(models.Model):
+    """
+    Singleton settings row — only one instance should ever exist.
+    Lets admin change booking rules without a code deploy.
+    """
+    min_booking_days = models.PositiveIntegerField(
+        default=5,
+        help_text="Minimum number of days from today a booking date must be."
+    )
+    max_booking_days = models.PositiveIntegerField(
+        default=21,
+        help_text="Maximum number of days from today a booking date can be."
+    )
+    payment_reminder_hours = models.PositiveIntegerField(
+        default=24,
+        help_text="Hours before the requested date to prompt the client for payment."
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Booking Settings"
+        verbose_name_plural = "Booking Settings"
+
+    def __str__(self):
+        return "Booking Settings"
+
+    def clean(self):
+        if self.min_booking_days >= self.max_booking_days:
+            raise ValidationError("Minimum booking days must be less than maximum booking days.")
+
+    def save(self, *args, **kwargs):
+        self.pk = 1  # force singleton
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        pass  # prevent deletion
+
+    @classmethod
+    def get_solo(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
 class StockTransferRequest(models.Model):
 
     class Status(models.TextChoices):
@@ -410,13 +453,15 @@ class Order(models.Model):
         if self.requested_date and self.requested_date < timezone.localdate():
             raise ValidationError("Requested date cannot be in the past.")
 
-        # NEW: enforce the booking window at the model level too, not just the view
         if self.order_type == self.OrderType.BOOK:
             if not self.requested_date:
                 raise ValidationError("A requested date is required for bookings.")
+
+            settings_obj = BookingSettings.get_solo()
             today = timezone.localdate()
-            earliest = today + timedelta(days=5)
-            latest = today + timedelta(days=21)
+            earliest = today + timedelta(days=settings_obj.min_booking_days)
+            latest = today + timedelta(days=settings_obj.max_booking_days)
+
             if self.requested_date < earliest or self.requested_date > latest:
                 raise ValidationError(
                     f"Booking date must be between {earliest:%b %d, %Y} and {latest:%b %d, %Y}."

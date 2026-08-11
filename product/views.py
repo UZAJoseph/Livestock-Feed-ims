@@ -8,7 +8,7 @@ from .models import Animal, Order, Product, FeedType
 from django.db.models import Sum, F, DecimalField, Count
 from django.db.models.functions import Coalesce, TruncDate
 from django.contrib.admin.views.decorators import staff_member_required
-from .models import Order, Sale, SaleItem, Product, Animal, FeedType, Review, District, Sector, Measure, Store
+from .models import Order, Sale, SaleItem, Product, Animal, FeedType, Review, District, Sector, Measure, Store, BookingSettings
 from .forms import RegisterForm, LoginForm,  ReviewForm
 from django.utils import timezone
 from django.contrib.auth.models import User, Group
@@ -22,6 +22,100 @@ from django.core.exceptions import ValidationError
 from datetime import timedelta, datetime
 from django.utils import timezone
 
+
+
+#views.py
+
+
+@login_required(login_url='/')
+def client_dashboard(request):
+    return render(request, 'client_dashboard.html')
+
+
+from datetime import datetime, time, timedelta
+from django.utils import timezone
+
+@login_required(login_url='/')
+def client_dashboard_data(request):
+    orders = (
+        Order.objects
+        .filter(user=request.user)
+        .select_related('product', 'product__feed_type', 'product__store')
+    )
+
+    total_orders = orders.count()
+    confirmed = orders.filter(status=Order.Status.CONFIRMED).count()
+    pending = orders.filter(status=Order.Status.PENDING).count()
+    cancelled = orders.filter(status=Order.Status.CANCELLED).count()
+
+    total_spent = (
+        orders.filter(status=Order.Status.CONFIRMED)
+        .aggregate(total=Sum(F('quantity') * F('unit_price')))['total']
+        or 0
+    )
+
+    sales = Sale.objects.filter(order__user=request.user)
+    payment_status_counts = list(sales.values('payment_status').annotate(count=Count('id')))
+    payment_method_counts = list(sales.values('payment_method').annotate(count=Count('id')))
+
+    settings_obj = BookingSettings.get_solo()
+    reminder_hours = settings_obj.payment_reminder_hours
+    now = timezone.now()
+    tz = timezone.get_current_timezone()
+
+    def compute_deadline(order):
+        """Payment deadline = start of requested_date minus payment_reminder_hours."""
+        if order.order_type != Order.OrderType.BOOK or not order.requested_date:
+            return None
+        if order.status != Order.Status.PENDING:
+            return None
+        naive_deadline = datetime.combine(order.requested_date, time.min) - timedelta(hours=reminder_hours)
+        return timezone.make_aware(naive_deadline, tz)
+
+    urgent_count = 0
+    order_rows = []
+    for o in orders.order_by('-created_at')[:200]:
+        sale = getattr(o, 'sale', None)
+        deadline = compute_deadline(o)
+        is_urgent = deadline is not None and deadline <= now
+        if is_urgent:
+            urgent_count += 1
+
+        order_rows.append({
+            'id': o.id,
+            'product': str(o.product),
+            'quantity': float(o.quantity),
+            'total_price': float(o.total_price),
+            'order_type': o.get_order_type_display(),
+            'status': o.get_status_display(),
+            'status_raw': o.status,
+            'requested_date': o.requested_date.isoformat() if o.requested_date else None,
+            'created_at': o.created_at.strftime('%Y-%m-%d %H:%M'),
+            'payment_status': sale.get_payment_status_display() if sale else None,
+            'payment_method': sale.get_payment_method_display() if sale else None,
+            'payment_deadline': deadline.isoformat() if deadline else None,
+            'needs_payment_soon': is_urgent,
+        })
+
+    return JsonResponse({
+        'stats': {
+            'total_orders': total_orders,
+            'confirmed': confirmed,
+            'pending': pending,
+            'cancelled': cancelled,
+            'total_spent': float(total_spent),
+            'needs_payment_soon': urgent_count,
+        },
+        'payment_status': {
+            'labels': [dict(PaymentStatus.choices).get(r['payment_status'], r['payment_status']) for r in payment_status_counts],
+            'counts': [r['count'] for r in payment_status_counts],
+        },
+        'payment_method': {
+            'labels': [dict(PaymentMethod.choices).get(r['payment_method'], r['payment_method']) for r in payment_method_counts],
+            'counts': [r['count'] for r in payment_method_counts],
+        },
+        'orders': order_rows,
+    })
 
 
 
@@ -498,6 +592,8 @@ def _base_context(request, **extra):
         .values_list('feed_type__animal_id', flat=True)
         .distinct()
     )
+    booking_settings = BookingSettings.get_solo()
+    
     context = {
         'animals': Animal.objects.filter(id__in=in_stock_animal_ids).order_by('name'),
         'products': Product.objects.select_related('feed_type', 'feed_type__animal', 'store'),
@@ -506,6 +602,8 @@ def _base_context(request, **extra):
         'review_form': ReviewForm(),
         'reviews': Review.objects.select_related('user', 'feed_type').all()[:20],
         'profile': getattr(request.user, 'profile', None) if request.user.is_authenticated else None,
+        'min_booking_days': booking_settings.min_booking_days,  # NEW
+        'max_booking_days': booking_settings.max_booking_days,
     }
     context.update(extra)
     return context
@@ -612,9 +710,10 @@ def order_form(request):
                     messages.error(request, "Invalid date format.")
                     return render(request, 'base.html', _base_context(request))
 
+                settings_obj = BookingSettings.get_solo()
                 today = timezone.localdate()
-                earliest = today + timedelta(days=5)
-                latest = today + timedelta(days=21)
+                earliest = today + timedelta(days=settings_obj.min_booking_days)
+                latest = today + timedelta(days=settings_obj.max_booking_days)
 
                 if requested_date < earliest or requested_date > latest:
                     messages.error(
