@@ -489,6 +489,16 @@
             background: rgba(201, 86, 86, 0.18);
             color: #d68383;
         }
+        #restockFilterProduct,
+#restockFilterStore {
+    color-scheme: dark;
+}
+
+#restockFilterProduct option,
+#restockFilterStore option {
+    background: #1f1130;
+    color: #ffffff;
+}
     </style>
 </head>
 
@@ -514,6 +524,7 @@
         <nav class="sidebar" id="sidebarNav">
             <div class="label">Activity</div>
             <button class="nav-item active" data-target="overview"><span class="dot"></span>Overview</button>
+            <button class="nav-item" data-target="bookings"><span class="dot"></span>Bookings</button>
             <button class="nav-item" data-target="revenue"><span class="dot"></span>Revenue Trend</button>
             <button class="nav-item" data-target="transfers"><span class="dot"></span>Stock Transfers</button>
             <button class="nav-item" data-target="paymentStatus"><span class="dot"></span>Payment Status</button>
@@ -522,6 +533,7 @@
             <button class="nav-item" data-target="status"><span class="dot"></span>Orders by Status</button>
             <button class="nav-item" data-target="customers"><span class="dot"></span>Top Customers</button>
             <button class="nav-item" data-target="stock"><span class="dot"></span>Stock & Consumption</button>
+            <button class="nav-item" data-target="restocks"><span class="dot"></span>Restock Ledger</button>
             <button class="nav-item" data-target="models"><span class="dot"></span>Model Summary</button>
             <div class="foot-note">Select an item to focus its chart. Overview shows everything at a glance.</div>
         </nav>
@@ -606,6 +618,10 @@
                         <h3>Top Customers</h3>
                         <div class="mini-chart"><canvas id="miniCustomers"></canvas></div>
                     </div>
+                    <div class="mini-card">
+                        <h3>Bookings by Status</h3>
+                        <div class="mini-chart"><canvas id="miniBookings"></canvas></div>
+                    </div>
                 </div>
 
                 <!-- Focused single-chart views -->
@@ -633,6 +649,118 @@
                             </table>
                         </div>
                     </div>
+                    <div class="chart-slot" id="slot-bookings">
+                        <div class="stats" id="bookingSummaryStats" style="margin-bottom:16px;"></div>
+                        <div class="stock-table-wrap">
+                            <table class="stock-table" id="bookingTable">
+                                <thead>
+                                    <tr>
+                                        <th>Client</th>
+                                        <th>Telephone</th>
+                                        <th>Product</th>
+                                        <th>Store</th>
+                                        <th>Quantity</th>
+                                        <th>Total Price</th>
+                                        <th>Requested Date</th>
+                                        <th>Status</th>
+                                        <th>Created</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bookingTableBody">
+                                    <tr>
+                                        <td colspan="9">Loading…</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="chart-slot" id="slot-bookings">
+                        <div class="stats" id="bookingSummaryStats" style="margin-bottom:16px;"></div>
+
+                        <div class="mini-card" style="max-width:320px; margin-bottom:20px;">
+                            <h3>Bookings by Status</h3>
+                            <div class="mini-chart" style="min-height:200px;"><canvas id="bookingStatusChart"></canvas>
+                            </div>
+                        </div>
+                        
+
+                        <div class="stock-table-wrap">
+                            <table class="stock-table" id="bookingTable">
+                                <thead>
+                                    <tr>
+                                        <th>Client</th>
+                                        <th>Telephone</th>
+                                        <th>Product</th>
+                                        <th>Store</th>
+                                        <th>Quantity</th>
+                                        <th>Total Price</th>
+                                        <th>Requested Date</th>
+                                        <th>Status</th>
+                                        <th>Created</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bookingTableBody">
+                                    <tr>
+                                        <td colspan="9">Loading…</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="chart-slot" id="slot-restocks">
+                            <div class="stats" id="restockSummaryStats" style="margin-bottom:14px;"></div>
+
+                            <div
+                                style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; align-items:center;">
+                                <select id="restockFilterProduct"
+                                    style="background:rgba(255,255,255,0.05); color:var(--text-primary); border:1px solid var(--glass-border); border-radius:8px; padding:6px 10px; font-size:12.5px;">
+                                    <option value="">All Products</option>
+                                </select>
+                                <select id="restockFilterStore"
+                                    style="background:rgba(255,255,255,0.05); color:var(--text-primary); border:1px solid var(--glass-border); border-radius:8px; padding:6px 10px; font-size:12.5px;">
+                                    <option value="">All Stores</option>
+                                </select>
+                                <input type="date" id="restockFilterFrom"
+                                    style="background:rgba(255,255,255,0.05); color:var(--text-primary); border:1px solid var(--glass-border); border-radius:8px; padding:6px 10px; font-size:12.5px;">
+                                <span style="color:var(--text-faint); font-size:12px;">to</span>
+                                <input type="date" id="restockFilterTo"
+                                    style="background:rgba(255,255,255,0.05); color:var(--text-primary); border:1px solid var(--glass-border); border-radius:8px; padding:6px 10px; font-size:12.5px;">
+                                <button id="restockFilterApply" class="status-pill ok"
+                                    style="cursor:pointer; border:none;">Apply</button>
+                                <button id="restockFilterReset" class="status-pill low"
+                                    style="cursor:pointer; border:none;">Reset</button>
+                            </div>
+
+                            <div class="mini-card" style="max-width:100%; margin-bottom:20px;">
+                                <h3>Stock Balance Over Time (filtered product)</h3>
+                                <div class="mini-chart" style="min-height:200px;"><canvas
+                                        id="restockBalanceChart"></canvas></div>
+                            </div>
+
+                            <div class="stock-table-wrap">
+                                <table class="stock-table" id="restockTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Product</th>
+                                            <th>Store</th>
+                                            <th>Qty Added</th>
+                                            <th>Cost/Unit</th>
+                                            <th>Total Cost</th>
+                                            <th>Stock Before</th>
+                                            <th>Stock After</th>
+                                            <th>Restocked By</th>
+                                            <th>Note</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="restockTableBody">
+                                        <tr>
+                                            <td colspan="10">Loading…</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     <div class="chart-slot" id="slot-transfers">
                         <h3 style="font-size:14px; color:var(--text-muted); margin-bottom:10px;">Awaiting Your Approval
                         </h3>
@@ -812,6 +940,136 @@
             });
         }
 
+        function renderRestockSummaryCards(totals) {
+            const container = document.getElementById('restockSummaryStats');
+            container.innerHTML = `
+        <div class="stat-card">
+            <div class="stat-label">Total Quantity Restocked</div>
+            <div class="stat-value">${fmtMoney(totals.total_quantity)}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Total Restock Cost</div>
+            <div class="stat-value">${fmtMoney(totals.total_cost)} RWF</div>
+        </div>
+    `;
+        }
+
+        function populateRestockFilters(filters) {
+            const productSel = document.getElementById('restockFilterProduct');
+            const storeSel = document.getElementById('restockFilterStore');
+
+            if (productSel.dataset.populated) return; // only build options once
+            productSel.dataset.populated = '1';
+            storeSel.dataset.populated = '1';
+
+            filters.stores.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.id;
+                opt.textContent = s.name;
+                storeSel.appendChild(opt);
+            });
+
+            filters.products.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.name;
+                opt.dataset.storeId = p.store_id;
+                productSel.appendChild(opt);
+            });
+        }
+
+        function buildRestockQuery() {
+            const params = new URLSearchParams();
+            const product = document.getElementById('restockFilterProduct').value;
+            const store = document.getElementById('restockFilterStore').value;
+            const from = document.getElementById('restockFilterFrom').value;
+            const to = document.getElementById('restockFilterTo').value;
+
+            if (product) params.set('product', product);
+            if (store) params.set('store', store);
+            if (from) params.set('date_from', from);
+            if (to) params.set('date_to', to);
+
+            return params.toString();
+        }
+
+        function loadRestockData() {
+            const qs = buildRestockQuery();
+            const url = "{% url 'restock_ledger_data' %}" + (qs ? '?' + qs : '');
+
+            fetch(url).then(r => r.json()).then(data => {
+                renderRestockSummaryCards(data.totals);
+                populateRestockFilters(data.filters);
+
+                const tbody = document.getElementById('restockTableBody');
+                tbody.innerHTML = '';
+                const rows = data.rows || [];
+
+                if (rows.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="10">No restocks found for this filter.</td></tr>';
+                } else {
+                    rows.forEach(row => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                    <td>${row.date}</td>
+                    <td>${row.product}</td>
+                    <td>${row.store}</td>
+                    <td>+${fmtMoney(row.quantity)}</td>
+                    <td>${fmtMoney(row.cost_per_unit)} RWF</td>
+                    <td>${fmtMoney(row.total_cost)} RWF</td>
+                    <td>${row.stock_before ?? '—'}</td>
+                    <td>${row.stock_after ?? '—'}</td>
+                    <td>${row.restocked_by}</td>
+                    <td>${row.note || '—'}</td>
+                `;
+                        tbody.appendChild(tr);
+                    });
+                }
+
+                // Balance-over-time chart: only sensible when a single product is selected
+                const productSelected = document.getElementById('restockFilterProduct').value;
+                if (chartInstances.restockBalance) chartInstances.restockBalance.destroy();
+
+                if (productSelected && rows.length > 0) {
+                    const chronological = [...rows].reverse(); // rows arrive newest-first
+                    chartInstances.restockBalance = buildLine(
+                        document.getElementById('restockBalanceChart'),
+                        {
+                            labels: chronological.map(r => r.date),
+                            totals: chronological.map(r => r.stock_after ?? r.stock_before ?? 0),
+                        },
+                        false
+                    );
+                } else {
+                    document.getElementById('restockBalanceChart').getContext('2d').clearRect(0, 0, 9999, 9999);
+                }
+            }).catch(() => {
+                document.getElementById('restockTableBody').innerHTML =
+                    '<tr><td colspan="10">Restock data unavailable.</td></tr>';
+            });
+        }
+
+        document.getElementById('restockFilterApply').addEventListener('click', loadRestockData);
+        document.getElementById('restockFilterReset').addEventListener('click', () => {
+            document.getElementById('restockFilterProduct').value = '';
+            document.getElementById('restockFilterStore').value = '';
+            document.getElementById('restockFilterFrom').value = '';
+            document.getElementById('restockFilterTo').value = '';
+            loadRestockData();
+        });
+
+        // Filtering store narrows the product dropdown
+        document.getElementById('restockFilterStore').addEventListener('change', function () {
+            const storeId = this.value;
+            document.querySelectorAll('#restockFilterProduct option').forEach(opt => {
+                if (!opt.value) return;
+                opt.hidden = storeId && opt.dataset.storeId !== storeId;
+            });
+            document.getElementById('restockFilterProduct').value = '';
+        });
+
+        loadRestockData();
+
         function renderPaymentStatCards(containerId, data) {
             const container = document.getElementById(containerId);
             container.innerHTML = '';
@@ -963,6 +1221,121 @@
                     '<tr><td colspan="7">Transfer data unavailable.</td></tr>';
             });
         }
+        function statusClassForBooking(statusRaw) {
+            if (statusRaw === 'CONFIRMED') return 'ok';
+            if (statusRaw === 'CANCELLED') return 'out';
+            return 'low'; // PENDING (and anything else)
+        }
+
+        function renderBookingSummaryCards(stats) {
+            const container = document.getElementById('bookingSummaryStats');
+            container.innerHTML = `
+        <div class="stat-card">
+            <div class="stat-label">Total Bookings</div>
+            <div class="stat-value">${fmtMoney(stats.total_bookings)}</div>
+            <div class="stat-sub">${fmtMoney(stats.total_value)} RWF</div>
+        </div>
+        <div class="stat-card highlight">
+            <div class="stat-label">Pending</div>
+            <div class="stat-value">${fmtMoney(stats.pending)}</div>
+            <div class="stat-sub">${fmtMoney(stats.pending_value)} RWF</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Confirmed</div>
+            <div class="stat-value">${fmtMoney(stats.confirmed)}</div>
+            <div class="stat-sub">${fmtMoney(stats.confirmed_value)} RWF</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Cancelled</div>
+            <div class="stat-value">${fmtMoney(stats.cancelled)}</div>
+            <div class="stat-sub">${fmtMoney(stats.cancelled_value)} RWF</div>
+        </div>
+    `;
+        }
+
+        function statusClassForBooking(statusRaw) {
+            if (statusRaw === 'CONFIRMED') return 'ok';
+            if (statusRaw === 'CANCELLED') return 'out';
+            return 'low'; // PENDING (and anything else)
+        }
+
+        function renderBookingSummaryCards(stats) {
+            const container = document.getElementById('bookingSummaryStats');
+            container.innerHTML = `
+        <div class="stat-card">
+            <div class="stat-label">Total Bookings</div>
+            <div class="stat-value">${fmtMoney(stats.total_bookings)}</div>
+            <div class="stat-sub">${fmtMoney(stats.total_value)} RWF</div>
+        </div>
+        <div class="stat-card highlight">
+            <div class="stat-label">Pending</div>
+            <div class="stat-value">${fmtMoney(stats.pending)}</div>
+            <div class="stat-sub">${fmtMoney(stats.pending_value)} RWF</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Confirmed</div>
+            <div class="stat-value">${fmtMoney(stats.confirmed)}</div>
+            <div class="stat-sub">${fmtMoney(stats.confirmed_value)} RWF</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Cancelled</div>
+            <div class="stat-value">${fmtMoney(stats.cancelled)}</div>
+            <div class="stat-sub">${fmtMoney(stats.cancelled_value)} RWF</div>
+        </div>
+    `;
+        }
+
+        function loadBookingData() {
+            fetch("{% url 'booking_stats_data' %}").then(r => r.json()).then(data => {
+                const stats = data.stats;
+                renderBookingSummaryCards(stats);
+
+                // Build chart-ready dataset from the stats object
+                const chartData = {
+                    labels: ['Pending', 'Confirmed', 'Cancelled'],
+                    counts: [stats.pending, stats.confirmed, stats.cancelled],
+                    totals: [stats.pending_value, stats.confirmed_value, stats.cancelled_value],
+                };
+
+                if (chartInstances.bookingStatusMain) chartInstances.bookingStatusMain.destroy();
+                if (chartInstances.bookingStatusMini) chartInstances.bookingStatusMini.destroy();
+
+                chartInstances.bookingStatusMain = buildPieWithRevenue(document.getElementById('bookingStatusChart'), chartData);
+                chartInstances.bookingStatusMini = buildPieWithRevenue(document.getElementById('miniBookings'), chartData);
+
+                // Table
+                const tbody = document.getElementById('bookingTableBody');
+                tbody.innerHTML = '';
+                const rows = data.rows || [];
+
+                if (rows.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9">No bookings found.</td></tr>';
+                    return;
+                }
+
+                rows.forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                <td>${row.client}</td>
+                <td>${row.telephone || '—'}</td>
+                <td>${row.product}</td>
+                <td>${row.store}</td>
+                <td>${row.quantity}</td>
+                <td>${fmtMoney(row.total_price)} RWF</td>
+                <td>${row.requested_date || '—'}</td>
+                <td><span class="status-pill ${statusClassForBooking(row.status_raw)}">${row.status}</span></td>
+                <td>${row.created_at}</td>
+            `;
+                    tbody.appendChild(tr);
+                });
+            }).catch(() => {
+                document.getElementById('bookingTableBody').innerHTML =
+                    '<tr><td colspan="9">Booking data unavailable.</td></tr>';
+            });
+        }
+
+
+        loadBookingData();
 
         loadTransferData();
 
@@ -1023,6 +1396,8 @@
             stock: ['Stock & Consumption', 'Daily usage & estimated stockout'],
             models: ['Model Summary', 'Record counts across all models'],
             transfers: ['Stock Transfers', 'Confirmed, rejected & pending transfer requests'],
+            bookings: ['Booking Stats', 'Requested, confirmed & cancelled bookings, with total value'],
+            restocks: ['Restock Ledger', 'Stock movements, cost, and running balance per product'],
         };
 
         function switchPanel(target) {

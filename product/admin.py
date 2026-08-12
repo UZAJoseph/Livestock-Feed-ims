@@ -34,13 +34,15 @@ class RestockAdmin(admin.ModelAdmin):
     list_display = ('product', 'quantity', 'cost_per_unit', 'total_cost', 'restocked_by', 'created_at')
     list_filter = ('created_at', 'product__store', 'restocked_by')
     search_fields = ('product__feed_type__name', 'note')
-    readonly_fields = ('created_at',)
+    readonly_fields = ('created_at', 'restocked_by',)
     autocomplete_fields = ('product',)
 
     def save_model(self, request, obj, form, change):
         if not obj.pk:  # new restock
             obj.restocked_by = request.user
         super().save_model(request, obj, form, change)
+
+
 
 class UserProfileInline(admin.StackedInline):
     model = UserProfile

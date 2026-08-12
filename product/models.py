@@ -342,6 +342,8 @@ class Restock(models.Model):
         related_name='restocks_made',
     )
     note = models.CharField(max_length=255, blank=True)
+    stock_before = models.DecimalField(max_digits=10, decimal_places=2, editable=False, null=True)
+    stock_after = models.DecimalField(max_digits=10, decimal_places=2, editable=False, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -358,17 +360,18 @@ class Restock(models.Model):
         is_new = self._state.adding
 
         with transaction.atomic():
-            product = Product.objects.select_for_update().get(pk=self.product_id)
-
-            super().save(*args, **kwargs)
-
             if is_new:
+                product = Product.objects.select_for_update().get(pk=self.product_id)
                 old_qty = product.stock_quantity
                 old_cost = product.cost
-
                 new_qty = old_qty + self.quantity
 
-                # Weighted average cost across old stock + incoming stock
+                # snapshot the ledger values before/after this restock
+                self.stock_before = old_qty
+                self.stock_after = new_qty
+
+                super().save(*args, **kwargs)
+
                 if new_qty > 0:
                     product.cost = (
                         (old_qty * old_cost) + (self.quantity * self.cost_per_unit)
@@ -376,6 +379,8 @@ class Restock(models.Model):
 
                 product.stock_quantity = new_qty
                 product.save(update_fields=['stock_quantity', 'cost'])
+            else:
+                super().save(*args, **kwargs)
 
 class PaymentStatus(models.TextChoices):
     PAID = 'paid', 'Paid'

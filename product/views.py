@@ -17,14 +17,75 @@ from django.db.models import Sum, Count, F, DecimalField, ExpressionWrapper
 from django.db.models.functions import TruncDate, Coalesce
 from django.http import JsonResponse
 from django.shortcuts import render
-from .models import Order, Product, PaymentMethod, PaymentStatus, StockTransferRequest
+from .models import Order, Product, PaymentMethod, PaymentStatus, StockTransferRequest, Restock
 from django.core.exceptions import ValidationError
 from datetime import timedelta, datetime
 from django.utils import timezone
-
+from datetime import datetime, time, timedelta
+from django.utils import timezone
+# views.py
+from django.db.models import Sum, F
+from django.http import JsonResponse
 
 
 #views.py
+
+@login_required(login_url='/')
+@permission_required('product.can_view_dashboard', raise_exception=True)
+@login_required(login_url='/')
+@permission_required('product.can_view_dashboard', raise_exception=True)
+def restock_ledger_data(request):
+    restocks = Restock.objects.select_related('product', 'product__store', 'restocked_by')
+
+    product_id = request.GET.get('product')
+    store_id = request.GET.get('store')
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
+
+    if product_id:
+        restocks = restocks.filter(product_id=product_id)
+    if store_id:
+        restocks = restocks.filter(product__store_id=store_id)
+    if date_from:
+        restocks = restocks.filter(created_at__date__gte=date_from)
+    if date_to:
+        restocks = restocks.filter(created_at__date__lte=date_to)
+
+    totals = restocks.aggregate(
+        total_quantity=Sum('quantity'),
+        total_cost=Sum(F('quantity') * F('cost_per_unit')),
+    )
+
+    rows = []
+    for r in restocks.order_by('-created_at')[:300]:
+        rows.append({
+            'id': r.id,
+            'date': r.created_at.strftime('%Y-%m-%d %H:%M'),
+            'product': str(r.product),
+            'store': r.product.store.name,
+            'quantity': float(r.quantity),
+            'cost_per_unit': float(r.cost_per_unit),
+            'total_cost': float(r.total_cost),
+            'stock_before': float(r.stock_before) if r.stock_before is not None else None,
+            'stock_after': float(r.stock_after) if r.stock_after is not None else None,
+            'restocked_by': r.restocked_by.get_full_name() or r.restocked_by.username,
+            'note': r.note,
+        })
+
+    products = Product.objects.select_related('store', 'feed_type').order_by('feed_type', 'id')  # ← this line, replaced
+    stores = Store.objects.order_by('name')
+
+    return JsonResponse({
+        'totals': {
+            'total_quantity': float(totals['total_quantity'] or 0),
+            'total_cost': float(totals['total_cost'] or 0),
+        },
+        'rows': rows,
+        'filters': {
+            'products': [{'id': p.id, 'name': str(p), 'store_id': p.store_id} for p in products],
+            'stores': [{'id': s.id, 'name': s.name} for s in stores],
+        },
+    })
 
 
 @login_required(login_url='/')
@@ -32,8 +93,56 @@ def client_dashboard(request):
     return render(request, 'client_dashboard.html')
 
 
-from datetime import datetime, time, timedelta
-from django.utils import timezone
+
+
+
+@login_required(login_url='/')
+@permission_required('product.can_view_dashboard', raise_exception=True)
+def booking_stats_data(request):
+    bookings = Order.objects.filter(order_type=Order.OrderType.BOOK)
+
+    total_bookings = bookings.count()
+    pending = bookings.filter(status=Order.Status.PENDING).count()
+    confirmed = bookings.filter(status=Order.Status.CONFIRMED).count()
+    cancelled = bookings.filter(status=Order.Status.CANCELLED).count()
+
+    def value_of(qs):
+        return float(qs.aggregate(total=Sum(F('quantity') * F('unit_price')))['total'] or 0)
+
+    total_value = value_of(bookings)
+    pending_value = value_of(bookings.filter(status=Order.Status.PENDING))
+    confirmed_value = value_of(bookings.filter(status=Order.Status.CONFIRMED))
+    cancelled_value = value_of(bookings.filter(status=Order.Status.CANCELLED))
+
+    rows = []
+    for o in bookings.select_related('product', 'product__store').order_by('-created_at')[:200]:
+        rows.append({
+            'id': o.id,
+            'client': o.full_name,
+            'telephone': o.telephone,
+            'product': str(o.product),
+            'store': o.product.store.name,
+            'quantity': float(o.quantity),
+            'total_price': float(o.total_price),
+            'requested_date': o.requested_date.isoformat() if o.requested_date else None,
+            'status': o.get_status_display(),
+            'status_raw': o.status,
+            'created_at': o.created_at.strftime('%Y-%m-%d %H:%M'),
+        })
+
+    return JsonResponse({
+        'stats': {
+            'total_bookings': total_bookings,
+            'pending': pending,
+            'confirmed': confirmed,
+            'cancelled': cancelled,
+            'total_value': total_value,
+            'pending_value': pending_value,
+            'confirmed_value': confirmed_value,
+            'cancelled_value': cancelled_value,
+        },
+        'rows': rows,
+    })
 
 @login_required(login_url='/')
 def client_dashboard_data(request):
