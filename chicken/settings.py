@@ -199,7 +199,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 #SESSION CONTROL
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 # Session expires after 30 minutes (in seconds)
-SESSION_COOKIE_AGE = 180
+SESSION_COOKIE_AGE = 60 * 15
 
 # Refresh the session expiry on each request
 SESSION_SAVE_EVERY_REQUEST = True
