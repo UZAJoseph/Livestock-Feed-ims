@@ -967,7 +967,7 @@ def order_form(request):
             else:
                 messages.success(request, "Your order has been submitted! We'll contact you shortly to confirm.")
 
-            request.session['open_order_modal'] = True
+            request.session['open_order_modal'] = order_type
             return redirect('index')
 
         except Product.DoesNotExist:

@@ -248,6 +248,29 @@
     </div>
 </div>
 
+<!-- ============================================= -->
+<!-- MESSAGE MODAL (glass themed, auto-shows if there are messages) -->
+<!-- ============================================= -->
+{% if messages %}
+<div class="modal glass-modal message-modal" id="messageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content message-modal-content">
+            <div class="modal-body text-center py-4 px-4">
+                {% for message in messages %}
+                <div class="message-icon {{ message.tags }}">
+                    {% if message.tags == 'success' %}✓{% elif 'error' in message.tags or 'danger' in message.tags %}✕{% else %}ℹ{% endif %}
+                </div>
+                <p class="message-text mb-0">{{ message }}</p>
+                {% endfor %}
+            </div>
+            <div class="modal-footer border-0 justify-content-center pb-4 pt-0">
+                <button type="button" class="btn message-ok-btn px-4" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <style>
     .glass-modal .form-select option:disabled {
         color: rgba(255, 120, 120, 0.65);
@@ -320,6 +343,63 @@
     .modal-backdrop.show {
         opacity: 0.6;
     }
+
+    .message-modal-content {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 16px;
+    color: white;
+}
+
+.message-icon {
+    width: 56px;
+    height: 56px;
+    line-height: 56px;
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    font-size: 26px;
+    font-weight: 700;
+}
+
+.message-icon.success {
+    background: rgba(146, 201, 156, 0.25);
+    color: #a0d6b3;
+    border: 1px solid rgba(146, 201, 156, 0.5);
+}
+
+.message-icon.error,
+.message-icon.danger {
+    background: rgba(201, 86, 86, 0.25);
+    color: #f0c9c9;
+    border: 1px solid rgba(214, 131, 131, 0.5);
+}
+
+.message-icon.info,
+.message-icon.warning {
+    background: rgba(201, 146, 86, 0.25);
+    color: #d6b383;
+    border: 1px solid rgba(214, 179, 131, 0.5);
+}
+
+.message-text {
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.message-ok-btn {
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    color: white;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.message-ok-btn:hover {
+    background: rgba(255, 255, 255, 0.28);
+    color: white;
+}
 </style>
 
 <script>
@@ -337,19 +417,30 @@
         modal.show();
     }
 
-    ['orderNow', 'bookNow'].forEach(modalId => {
-        const modalEl = document.getElementById(modalId);
-        modalEl.addEventListener('hide.bs.modal', function () {
-            if (document.activeElement && this.contains(document.activeElement)) {
-                document.activeElement.blur();
-            }
-        });
-    });
-
     document.addEventListener('DOMContentLoaded', function () {
 
+        // -------------------------
+        // Blur focused element before hiding modal (accessibility)
+        // -------------------------
+        ['orderNow', 'bookNow'].forEach(modalId => {
+            const modalEl = document.getElementById(modalId);
+            if (!modalEl) return;
+            modalEl.addEventListener('hide.bs.modal', function () {
+                if (document.activeElement && this.contains(document.activeElement)) {
+                    document.activeElement.blur();
+                }
+            });
+        });
+
+        // -------------------------
+        // Shared product data + auto-show message modal
+        // -------------------------
         const dataSelect = document.getElementById('products-data');
         const productOptions = Array.from(dataSelect.options);
+        const messageModalEl = document.getElementById('messageModal');
+        if (messageModalEl) {
+            new bootstrap.Modal(messageModalEl).show();
+        }
 
         // -------------------------------------------------
         // Shared setup, reused for both "now" and "book" modals
@@ -533,7 +624,7 @@
         setupOrderModal('now', true);
         setupOrderModal('book', false);
 
-       // -------------------------
+        // -------------------------
         // Book Now: date field min/max — pulled from BookingSettings via context
         // -------------------------
         const dateInput = document.getElementById('id_requested_date');
@@ -552,6 +643,8 @@
             const display = d => d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
             bookingWindowText.textContent = `Choose a date between ${display(earliest)} and ${display(latest)}.`;
         }
-        
+
     });
+</script>
+
 </script>
