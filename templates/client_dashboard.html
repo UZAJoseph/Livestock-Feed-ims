@@ -852,6 +852,12 @@
                         <span class="role-badge" id="infoRole">Customer</span>
                     </div>
                     <div class="field">
+                        <span class="field-label">Groups</span>
+                        <div class="perm-list" id="infoGroups">
+                            <span class="perm-pill">No group membership</span>
+                        </div>
+                    </div>
+                    <div class="field">
                         <span class="field-label">Permissions</span>
                         <div class="perm-list" id="infoPermissions">
                             <span class="perm-pill">No special permissions on this account</span>
@@ -1277,6 +1283,17 @@
                     statusEl.classList.toggle('inactive', !isActive);
 
                     document.getElementById('infoRole').textContent = c.role || 'Customer';
+
+                    const groupsEl = document.getElementById('infoGroups');
+                    if (Array.isArray(c.groups) && c.groups.length) {
+                        groupsEl.innerHTML = '';
+                        c.groups.forEach(name => {
+                            const pill = document.createElement('span');
+                            pill.className = 'perm-pill granted';
+                            pill.textContent = name;
+                            groupsEl.appendChild(pill);
+                        });
+                    }
 
                     const permsEl = document.getElementById('infoPermissions');
                     if (Array.isArray(c.permissions) && c.permissions.length) {

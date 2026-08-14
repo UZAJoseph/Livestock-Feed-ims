@@ -291,11 +291,22 @@ def client_dashboard_data(request):
     elif request.user.is_staff:
         role = 'Staff'
     elif request.user.groups.exists():
-        # Show the first/primary group name as the role (e.g. "Managers")
         role = request.user.groups.first().name
     else:
         role = 'Customer'
 
+    # Permissions relevant to this app — shown with actual granted/denied status
+    tracked_permissions = [
+        ('product.can_view_dashboard', 'Can view dashboard'),
+        ('product.can_view_admin_panel', 'Can view admin panel'),
+        # add more (codename, display_name) pairs here as your app grows
+    ]
+    permissions = [
+        {'name': label, 'granted': request.user.has_perm(codename)}
+        for codename, label in tracked_permissions
+    ]
+
+    groups = [group.name for group in request.user.groups.all()]
     customer_info = {
         'name': request.user.get_full_name() or request.user.username,
         'username': request.user.username,
@@ -308,6 +319,7 @@ def client_dashboard_data(request):
         'date_joined': timezone.localtime(request.user.date_joined).strftime('%Y-%m-%d') if request.user.date_joined else None,
         'last_login': timezone.localtime(request.user.last_login).strftime('%Y-%m-%d %H:%M') if request.user.last_login else None,
         'role': role,
+        'groups': groups,
         'permissions': permissions,
     }
 
