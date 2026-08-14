@@ -290,6 +290,9 @@ def client_dashboard_data(request):
         role = 'Administrator'
     elif request.user.is_staff:
         role = 'Staff'
+    elif request.user.groups.exists():
+        # Show the first/primary group name as the role (e.g. "Managers")
+        role = request.user.groups.first().name
     else:
         role = 'Customer'
 
