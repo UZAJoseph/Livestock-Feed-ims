@@ -636,7 +636,12 @@
                 <h1>Dashboard</h1>
             </div>
 
-            <button class="nav-item active" data-view="orders-view" type="button">
+            <button class="nav-item active" data-view="overview-view" type="button">
+                <span class="nav-icon">📊</span>
+                <span>Overview</span>
+                <span class="badge" id="navUrgentBadge">0</span>
+            </button>
+            <button class="nav-item" data-view="orders-view" type="button">
                 <span class="nav-icon">🧾</span>
                 <span>Orders</span>
                 <span class="badge" id="navOrdersBadge">0</span>
@@ -662,8 +667,12 @@
         <!-- ---------- Main content ---------- -->
         <div class="main-content">
 
-            <!-- Orders view -->
-            <div class="view active" id="orders-view">
+            <!-- Overview view: stats + charts -->
+            <div class="view active" id="overview-view">
+                <div class="view-header">
+                    <h2>Overview</h2>
+                    <p>A snapshot of your orders, bookings and payments.</p>
+                </div>
 
                 <div class="urgent-banner" id="urgentBanner">
                     <span>⚠️</span>
@@ -711,6 +720,19 @@
                         <h3>Payment Method</h3>
                         <div class="chart-holder"><canvas id="paymentMethodChart"></canvas></div>
                     </div>
+                </div>
+
+                <div class="panel">
+                    <h3>Orders Over Time</h3>
+                    <div class="chart-holder"><canvas id="ordersOverTimeChart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Orders view: table only -->
+            <div class="view" id="orders-view">
+                <div class="view-header">
+                    <h2>Orders</h2>
+                    <p>Your full order history.</p>
                 </div>
 
                 <div class="orders-panel">
@@ -962,6 +984,30 @@
             });
         }
 
+        function buildBar(ctx, labels, values) {
+            if (!labels.length) return null;
+            return new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Orders',
+                        data: values,
+                        backgroundColor: '#9256c9',
+                        borderRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { precision: 0 } }
+                    }
+                }
+            });
+        }
+
         function statusPillClass(statusRaw) {
             if (statusRaw === 'confirmed') return 'confirmed';
             if (statusRaw === 'cancelled') return 'cancelled';
@@ -1160,10 +1206,24 @@
                 if (s.needs_payment_soon > 0) {
                     document.getElementById('urgentBanner').classList.add('active');
                     document.getElementById('urgentCount').textContent = s.needs_payment_soon;
+
+                    const overviewBadge = document.getElementById('navUrgentBadge');
+                    overviewBadge.textContent = s.needs_payment_soon;
+                    overviewBadge.classList.add('show');
                 }
 
                 buildPie(document.getElementById('paymentStatusChart'), data.payment_status.labels, data.payment_status.counts);
                 buildPie(document.getElementById('paymentMethodChart'), data.payment_method.labels, data.payment_method.counts);
+
+                // ---- Orders-over-time bar chart: group all orders by placed-on date ----
+                const dateCounts = {};
+                data.orders.forEach(o => {
+                    const day = (o.created_at || '').split(' ')[0];
+                    if (!day) return;
+                    dateCounts[day] = (dateCounts[day] || 0) + 1;
+                });
+                const sortedDays = Object.keys(dateCounts).sort();
+                buildBar(document.getElementById('ordersOverTimeChart'), sortedDays, sortedDays.map(d => dateCounts[d]));
 
                 // ---- Split combined order list into Orders vs Bookings ----
                 const ordersBody = document.getElementById('ordersOnlyTableBody');
