@@ -23,12 +23,80 @@ from datetime import timedelta, datetime
 from django.utils import timezone
 from datetime import datetime, time, timedelta
 from django.utils import timezone
-# views.py
+import json
 from django.db.models import Sum, F
 from django.http import JsonResponse
 
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 
-#views.py
+@login_required(login_url='/')
+def change_password(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid method'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    current_password = data.get('current_password', '')
+    new_password = data.get('new_password', '')
+
+    user = request.user
+
+    if not user.check_password(current_password):
+        return JsonResponse({'error': 'Current password is incorrect.'}, status=400)
+
+    try:
+        validate_password(new_password, user=user)
+    except DjangoValidationError as e:
+        return JsonResponse({'error': ' '.join(e.messages)}, status=400)
+
+    user.set_password(new_password)
+    user.save()
+    update_session_auth_hash(request, user)  # keeps the user logged in
+
+    return JsonResponse({'success': True})
+
+
+
+@login_required(login_url='/')
+def update_profile(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid method'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    name = data.get('name', '').strip()
+    email = data.get('email', '').strip()
+    phone = data.get('phone', '').strip()
+    address = data.get('address', '').strip()
+    city = data.get('city', '').strip()
+
+    user = request.user
+    if name:
+        parts = name.split(' ', 1)
+        user.first_name = parts[0]
+        user.last_name = parts[1] if len(parts) > 1 else ''
+    if email:
+        user.email = email
+    user.save()
+
+    profile = getattr(user, 'profile', None)
+    if profile:
+        # NOTE: adjust these field names to match your real Profile model
+        profile.telephone = phone
+        profile.village = address
+        profile.district = city
+        profile.save()
+
+    return JsonResponse({'success': True})
+
 
 @login_required(login_url='/')
 @permission_required('product.can_view_dashboard', raise_exception=True)
@@ -206,6 +274,40 @@ def client_dashboard_data(request):
             'needs_payment_soon': is_urgent,
         })
 
+        # ---- Customer / account info for the Account Info + Settings tabs ----
+    profile = getattr(request.user, 'profile', None)
+
+    permissions = [
+        {
+            'name': 'Can view dashboard',
+            'granted': request.user.has_perm('product.can_view_dashboard'),
+        },
+    ]
+    for group in request.user.groups.all():
+        permissions.append({'name': f'Group: {group.name}', 'granted': True})
+
+    if request.user.is_superuser:
+        role = 'Administrator'
+    elif request.user.is_staff:
+        role = 'Staff'
+    else:
+        role = 'Customer'
+
+    customer_info = {
+        'name': request.user.get_full_name() or request.user.username,
+        'username': request.user.username,
+        'email': request.user.email,
+        'phone': getattr(profile, 'telephone', '') if profile else '',
+        'address': getattr(profile, 'village', '') if profile else '',
+        'city': getattr(profile, 'district', '') if profile else '',
+        'customer_id': request.user.id,
+        'is_active': request.user.is_active,
+        'date_joined': timezone.localtime(request.user.date_joined).strftime('%Y-%m-%d') if request.user.date_joined else None,
+        'last_login': timezone.localtime(request.user.last_login).strftime('%Y-%m-%d %H:%M') if request.user.last_login else None,
+        'role': role,
+        'permissions': permissions,
+    }
+
     return JsonResponse({
         'stats': {
             'total_orders': total_orders,
@@ -224,6 +326,7 @@ def client_dashboard_data(request):
             'counts': [r['count'] for r in payment_method_counts],
         },
         'orders': order_rows,
+        'customer': customer_info,
     })
 
 

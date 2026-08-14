@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Orders</title>
+    <title>My Account</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -52,29 +52,39 @@
             margin: 0;
         }
 
-        .shell {
+        /* ---------- Page layout: sidebar + main ---------- */
+        .page {
             display: flex;
-            flex-direction: column;
+            align-items: flex-start;
             gap: 22px;
             padding: 28px;
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
-        .topbar {
+        .sidebar {
+            flex: 0 0 230px;
+            position: sticky;
+            top: 28px;
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 18px 24px;
+            flex-direction: column;
+            gap: 14px;
             border-radius: 16px;
             background: var(--glass-fill);
             border: 1px solid var(--glass-border);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
+            padding: 18px 14px;
         }
 
-        .topbar .eyebrow {
-            font-size: 12px;
+        .sidebar .brand {
+            padding: 6px 10px 12px;
+            border-bottom: 1px solid var(--glass-border);
+            margin-bottom: 4px;
+        }
+
+        .sidebar .brand .eyebrow {
+            font-size: 11px;
             letter-spacing: 0.14em;
             text-transform: uppercase;
             color: var(--accent-soft);
@@ -82,27 +92,112 @@
             margin-bottom: 4px;
         }
 
-        .topbar h1 {
-            font-size: 22px;
+        .sidebar .brand h1 {
+            font-size: 18px;
             font-weight: 700;
         }
 
-        .topbar-link {
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            text-align: left;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-muted);
+            font-family: 'Inter', sans-serif;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .nav-item .nav-icon {
+            font-size: 15px;
+            width: 18px;
+            text-align: center;
+        }
+
+        .nav-item:hover {
+            background: var(--glass-fill-hover);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: rgba(146, 86, 201, 0.18);
+            border-color: rgba(146, 86, 201, 0.4);
+            color: #fff;
+        }
+
+        .nav-item .badge {
+            margin-left: auto;
+            background: rgba(201, 86, 86, 0.28);
+            color: #f0c9c9;
+            font-size: 10.5px;
+            font-weight: 700;
+            padding: 1px 7px;
+            border-radius: 999px;
+            display: none;
+        }
+
+        .nav-item .badge.show {
+            display: inline-block;
+        }
+
+        .nav-divider {
+            border: none;
+            border-top: 1px solid var(--glass-border);
+            margin: 6px 4px;
+        }
+
+        .sidebar-footer-link {
             font-size: 12.5px;
             font-weight: 600;
             color: var(--accent-soft);
             text-decoration: none;
-            padding: 8px 14px;
-            border-radius: 8px;
+            padding: 10px 12px;
+            border-radius: 10px;
             border: 1px solid var(--glass-border);
             background: rgba(255, 255, 255, 0.03);
             transition: background 0.15s ease, color 0.15s ease;
-            white-space: nowrap;
+            text-align: center;
         }
 
-        .topbar-link:hover {
+        .sidebar-footer-link:hover {
             background: var(--glass-fill-hover);
             color: var(--text-primary);
+        }
+
+        .main-content {
+            flex: 1 1 0;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        .view {
+            display: none;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        .view.active {
+            display: flex;
+        }
+
+        .view-header h2 {
+            font-size: 19px;
+            font-weight: 700;
+        }
+
+        .view-header p {
+            margin-top: 4px;
+            font-size: 13px;
+            color: var(--text-faint);
         }
 
         /* ---------- Urgent payment banner ---------- */
@@ -217,7 +312,7 @@
             height: 100% !important;
         }
 
-        /* ---------- Orders table ---------- */
+        /* ---------- Orders / Bookings table ---------- */
         .orders-panel {
             border-radius: 18px;
             background: var(--glass-fill);
@@ -291,16 +386,6 @@
             color: #d68383;
         }
 
-        .type-pill {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 999px;
-            font-size: 11px;
-            font-weight: 600;
-            background: rgba(146, 86, 201, 0.18);
-            color: var(--accent-soft);
-        }
-
         .pay-badge {
             display: inline-block;
             padding: 3px 10px;
@@ -318,6 +403,216 @@
             text-align: center;
         }
 
+        /* ---------- Info panels (Account / Settings) ---------- */
+        .info-panel {
+            border-radius: 18px;
+            background: var(--glass-fill);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 20px 22px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .info-panel h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .field-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .field .field-label {
+            font-size: 11px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--text-faint);
+        }
+
+        .field .field-value {
+            font-size: 14px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            background: rgba(146, 86, 201, 0.22);
+            color: var(--accent-soft);
+            border: 1px solid rgba(146, 86, 201, 0.4);
+            width: fit-content;
+        }
+
+        .status-dot {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .status-dot::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #6fbf83;
+        }
+
+        .status-dot.inactive::before {
+            background: #d68383;
+        }
+
+        .perm-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .perm-pill {
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 11.5px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--glass-border);
+            color: var(--text-muted);
+        }
+
+        .perm-pill.granted {
+            background: rgba(146, 201, 156, 0.14);
+            border-color: rgba(146, 201, 156, 0.35);
+            color: #a0d6b3;
+        }
+
+        /* ---------- Editable forms ---------- */
+        .form-row {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-width: 420px;
+        }
+
+        .form-row label {
+            font-size: 12.5px;
+            color: var(--text-faint);
+        }
+
+        .form-row input {
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 13.5px;
+        }
+
+        .form-row input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
+            max-width: 700px;
+        }
+
+        .settings-save {
+            align-self: flex-start;
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: 1px solid rgba(146, 86, 201, 0.5);
+            background: rgba(146, 86, 201, 0.28);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .settings-save:hover {
+            background: rgba(146, 86, 201, 0.42);
+        }
+
+        .settings-save.danger {
+            border-color: rgba(201, 86, 86, 0.5);
+            background: rgba(201, 86, 86, 0.24);
+        }
+
+        .settings-save.danger:hover {
+            background: rgba(201, 86, 86, 0.38);
+        }
+
+        .settings-note {
+            font-size: 12.5px;
+            color: var(--text-faint);
+        }
+
+        .settings-note.error {
+            color: #f0a3a3;
+        }
+
+        .settings-note.success {
+            color: #a0d6b3;
+        }
+
+        .pw-rules {
+            font-size: 11.5px;
+            color: var(--text-faint);
+            margin: 0;
+            padding-left: 16px;
+        }
+
+        /* ---------- Mobile ---------- */
+        @media (max-width: 900px) {
+            .page {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                flex: 1 1 auto;
+                position: static;
+                width: 100%;
+                flex-direction: row;
+                flex-wrap: wrap;
+                align-items: center;
+            }
+
+            .sidebar .brand {
+                flex: 1 1 100%;
+                border-bottom: none;
+                padding-bottom: 4px;
+            }
+
+            .nav-divider {
+                display: none;
+            }
+
+            .sidebar-footer-link {
+                flex: 1 1 auto;
+            }
+        }
+
         @media (max-width: 800px) {
             .charts-row {
                 grid-template-columns: 1fr;
@@ -332,89 +627,293 @@
 
 <body>
     {% csrf_token %}
-    <div class="shell">
+    <div class="page">
 
-        <div class="topbar">
-            <div>
+        <!-- ---------- Sidebar ---------- -->
+        <div class="sidebar">
+            <div class="brand">
                 <div class="eyebrow">My Account</div>
-                <h1>My Orders & Bookings</h1>
+                <h1>Dashboard</h1>
             </div>
-            <a href="{% url 'index' %}" class="topbar-link">← Back to Site</a>
+
+            <button class="nav-item active" data-view="orders-view" type="button">
+                <span class="nav-icon">🧾</span>
+                <span>Orders</span>
+                <span class="badge" id="navOrdersBadge">0</span>
+            </button>
+            <button class="nav-item" data-view="bookings-view" type="button">
+                <span class="nav-icon">📅</span>
+                <span>Bookings</span>
+                <span class="badge" id="navBookingsBadge">0</span>
+            </button>
+            <button class="nav-item" data-view="account-view" type="button">
+                <span class="nav-icon">👤</span>
+                <span>Account Info</span>
+            </button>
+            <button class="nav-item" data-view="settings-view" type="button">
+                <span class="nav-icon">⚙️</span>
+                <span>Settings</span>
+            </button>
+
+            <hr class="nav-divider">
+            <a href="{% url 'index' %}" class="sidebar-footer-link">← Back to Site</a>
         </div>
 
-        <div class="urgent-banner" id="urgentBanner">
-            <span>⚠️</span>
-            <span><strong id="urgentCount">0</strong> booking(s) need payment soon so we can proceed. Please contact us
-                to complete payment.</span>
-        </div>
+        <!-- ---------- Main content ---------- -->
+        <div class="main-content">
 
-        <div class="stats">
-            <div class="stat-card danger" id="cardCountdown" style="display:none;">
-                <div class="stat-label">Next Payment Deadline</div>
-                <div class="stat-value" id="countdownValue" style="font-size:18px;">—</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Total Orders</div>
-                <div class="stat-value" id="statTotal">—</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Confirmed</div>
-                <div class="stat-value" id="statConfirmed">—</div>
-            </div>
-            <div class="stat-card highlight">
-                <div class="stat-label">Pending</div>
-                <div class="stat-value" id="statPending">—</div>
-            </div>
-            <div class="stat-card danger">
-                <div class="stat-label">Cancelled</div>
-                <div class="stat-value" id="statCancelled">—</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Total Spent</div>
-                <div class="stat-value" id="statSpent">—</div>
-            </div>
-            <div class="stat-card danger" id="cardNeedsPayment">
-                <div class="stat-label">Needs Payment Soon</div>
-                <div class="stat-value" id="statNeedsPayment">—</div>
-            </div>
-        </div>
+            <!-- Orders view -->
+            <div class="view active" id="orders-view">
 
-        <div class="charts-row">
-            <div class="panel">
-                <h3>Payment Status</h3>
-                <div class="chart-holder"><canvas id="paymentStatusChart"></canvas></div>
-            </div>
-            <div class="panel">
-                <h3>Payment Method</h3>
-                <div class="chart-holder"><canvas id="paymentMethodChart"></canvas></div>
-            </div>
-        </div>
+                <div class="urgent-banner" id="urgentBanner">
+                    <span>⚠️</span>
+                    <span><strong id="urgentCount">0</strong> booking(s) need payment soon so we can proceed. Please
+                        contact us to complete payment.</span>
+                </div>
 
-        <div class="orders-panel">
-            <h2>Order History</h2>
-            <div class="orders-table-wrap">
-                <table class="orders-table" id="ordersTable">
-                    <thead>
-                        <tr>
-                            <th>Product</th>
-                            <th>Qty</th>
-                            <th>Total (RWF)</th>
-                            <th>Type</th>
-                            <th>Requested Date</th>
-                            <th>Status</th>
-                            <th>Payment</th>
-                            <th>Placed On</th>
-                        </tr>
-                    </thead>
-                    <tbody id="ordersTableBody">
-                        <tr>
-                            <td colspan="8" class="empty-note">Loading your orders…</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                <div class="stats">
+                    <div class="stat-card danger" id="cardCountdown" style="display:none;">
+                        <div class="stat-label">Next Payment Deadline</div>
+                        <div class="stat-value" id="countdownValue" style="font-size:18px;">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Orders</div>
+                        <div class="stat-value" id="statTotal">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Confirmed</div>
+                        <div class="stat-value" id="statConfirmed">—</div>
+                    </div>
+                    <div class="stat-card highlight">
+                        <div class="stat-label">Pending</div>
+                        <div class="stat-value" id="statPending">—</div>
+                    </div>
+                    <div class="stat-card danger">
+                        <div class="stat-label">Cancelled</div>
+                        <div class="stat-value" id="statCancelled">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Spent</div>
+                        <div class="stat-value" id="statSpent">—</div>
+                    </div>
+                    <div class="stat-card danger" id="cardNeedsPayment">
+                        <div class="stat-label">Needs Payment Soon</div>
+                        <div class="stat-value" id="statNeedsPayment">—</div>
+                    </div>
+                </div>
 
+                <div class="charts-row">
+                    <div class="panel">
+                        <h3>Payment Status</h3>
+                        <div class="chart-holder"><canvas id="paymentStatusChart"></canvas></div>
+                    </div>
+                    <div class="panel">
+                        <h3>Payment Method</h3>
+                        <div class="chart-holder"><canvas id="paymentMethodChart"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="orders-panel">
+                    <h2>Order History</h2>
+                    <div class="orders-table-wrap">
+                        <table class="orders-table" id="ordersTable">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Qty</th>
+                                    <th>Total (RWF)</th>
+                                    <th>Requested Date</th>
+                                    <th>Status</th>
+                                    <th>Payment</th>
+                                    <th>Placed On</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersOnlyTableBody">
+                                <tr>
+                                    <td colspan="7" class="empty-note">Loading your orders…</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bookings view -->
+            <div class="view" id="bookings-view">
+                <div class="view-header">
+                    <h2>Bookings</h2>
+                    <p>Slaughter / service bookings you've scheduled with us.</p>
+                </div>
+
+                <div class="orders-panel">
+                    <h2>Booking History</h2>
+                    <div class="orders-table-wrap">
+                        <table class="orders-table" id="bookingsTable">
+                            <thead>
+                                <tr>
+                                    <th>Product / Service</th>
+                                    <th>Qty</th>
+                                    <th>Total (RWF)</th>
+                                    <th>Requested Date</th>
+                                    <th>Status</th>
+                                    <th>Payment</th>
+                                    <th>Placed On</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bookingsTableBody">
+                                <tr>
+                                    <td colspan="7" class="empty-note">Loading your bookings…</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Info view -->
+            <div class="view" id="account-view">
+                <div class="view-header">
+                    <h2>Account Info</h2>
+                    <p>All details currently on file for your account.</p>
+                </div>
+
+                <div class="info-panel">
+                    <h3>Profile</h3>
+                    <div class="field-grid">
+                        <div class="field">
+                            <span class="field-label">Full Name</span>
+                            <span class="field-value" id="infoName">—</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-label">Username</span>
+                            <span class="field-value" id="infoUsername">—</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-label">Email</span>
+                            <span class="field-value" id="infoEmail">—</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-label">Phone</span>
+                            <span class="field-value" id="infoPhone">—</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-label">Address</span>
+                            <span class="field-value" id="infoAddress">—</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-label">City / District</span>
+                            <span class="field-value" id="infoCity">—</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-label">Customer ID</span>
+                            <span class="field-value" id="infoCustomerId">—</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-label">Account Status</span>
+                            <span class="field-value"><span class="status-dot" id="infoStatus">Active</span></span>
+                        </div>
+                        <div class="field">
+                            <span class="field-label">Date Joined</span>
+                            <span class="field-value" id="infoDateJoined">—</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-label">Last Login</span>
+                            <span class="field-value" id="infoLastLogin">—</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-panel">
+                    <h3>Role & Permissions</h3>
+                    <div class="field">
+                        <span class="field-label">Role</span>
+                        <span class="role-badge" id="infoRole">Customer</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-label">Permissions</span>
+                        <div class="perm-list" id="infoPermissions">
+                            <span class="perm-pill">No special permissions on this account</span>
+                        </div>
+                    </div>
+                    <p class="settings-note">
+                        Permissions control what you can do on this platform. Contact us if you believe your access
+                        level should change.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Settings view -->
+            <div class="view" id="settings-view">
+                <div class="view-header">
+                    <h2>Settings</h2>
+                    <p>Update your contact details or change your password.</p>
+                </div>
+
+                <div class="info-panel">
+                    <h3>Contact Details</h3>
+                    <div class="form-grid">
+                        <div class="form-row">
+                            <label for="settingsName">Full Name</label>
+                            <input type="text" id="settingsName" placeholder="Your name">
+                        </div>
+                        <div class="form-row">
+                            <label for="settingsEmail">Email</label>
+                            <input type="email" id="settingsEmail" placeholder="you@example.com">
+                        </div>
+                        <div class="form-row">
+                            <label for="settingsPhone">Phone</label>
+                            <input type="text" id="settingsPhone" placeholder="+250 ...">
+                        </div>
+                        <div class="form-row">
+                            <label for="settingsAddress">Address</label>
+                            <input type="text" id="settingsAddress" placeholder="Street / sector">
+                        </div>
+                        <div class="form-row">
+                            <label for="settingsCity">City / District</label>
+                            <input type="text" id="settingsCity" placeholder="e.g. Kigali">
+                        </div>
+                    </div>
+                    <button class="settings-save" id="settingsSaveBtn" type="button">Save Changes</button>
+                    <p class="settings-note" id="settingsStatus"></p>
+                </div>
+
+                <div class="info-panel">
+                    <h3>Change Password</h3>
+                    <div class="form-grid">
+                        <div class="form-row">
+                            <label for="currentPassword">Current Password</label>
+                            <input type="password" id="currentPassword" autocomplete="current-password">
+                        </div>
+                        <div class="form-row">
+                            <label for="newPassword">New Password</label>
+                            <input type="password" id="newPassword" autocomplete="new-password">
+                        </div>
+                        <div class="form-row">
+                            <label for="confirmPassword">Confirm New Password</label>
+                            <input type="password" id="confirmPassword" autocomplete="new-password">
+                        </div>
+                    </div>
+                    <ul class="pw-rules">
+                        <li>At least 8 characters</li>
+                        <li>Not entirely numeric</li>
+                        <li>Should not be too similar to your name or email</li>
+                    </ul>
+                    <button class="settings-save danger" id="passwordSaveBtn" type="button">Update Password</button>
+                    <p class="settings-note" id="passwordStatus"></p>
+                </div>
+
+                <div class="info-panel">
+                    <h3>Notifications</h3>
+                    <div class="form-row" style="flex-direction: row; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="notifyPayment" style="width:auto;" checked>
+                        <label for="notifyPayment" style="font-size:13px; color: var(--text-muted);">
+                            Remind me about upcoming payment deadlines
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </div>
 
     <script>
@@ -422,9 +921,24 @@
         Chart.defaults.borderColor = 'rgba(255,255,255,0.08)';
         Chart.defaults.font.family = "'Inter', sans-serif";
 
+        /* ---------- Sidebar view switching ---------- */
+        document.querySelectorAll('.nav-item[data-view]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.nav-item[data-view]').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.view).classList.add('active');
+            });
+        });
+
         function fmtMoney(n) {
             n = Number(n) || 0;
             return n.toLocaleString(undefined, { maximumFractionDigits: 0 });
+        }
+
+        function fmtVal(v) {
+            return (v === null || v === undefined || v === '') ? '—' : v;
         }
 
         function buildPie(ctx, labels, counts) {
@@ -504,6 +1018,134 @@
             setInterval(tick, 1000);
         }
 
+        // NOTE: this assumes each order object has an `order_type` field whose value
+        // contains either "order" or "booking" (case-insensitive), matching the
+        // type-pill used in the previous single table. Adjust isBooking() below if
+        // your model uses a different flag (e.g. a boolean `is_booking`).
+        function isBooking(o) {
+            return (o.order_type || '').toLowerCase().includes('book');
+        }
+
+        function renderRow(o) {
+            const tr = document.createElement('tr');
+            if (o.needs_payment_soon) tr.classList.add('urgent');
+
+            let paymentCell;
+            if (o.payment_status) {
+                paymentCell = o.payment_status;
+            } else if (o.payment_deadline) {
+                paymentCell = `<span class="pay-badge" data-deadline="${o.payment_deadline}">Calculating…</span>`;
+            } else {
+                paymentCell = '—';
+            }
+
+            tr.innerHTML = `
+                <td>${o.product}</td>
+                <td>${o.quantity}</td>
+                <td>${fmtMoney(o.total_price)}</td>
+                <td>${o.requested_date ?? '—'}</td>
+                <td><span class="status-pill ${statusPillClass(o.status_raw)}">${o.status}</span></td>
+                <td>${paymentCell}</td>
+                <td>${o.created_at}</td>
+            `;
+            return tr;
+        }
+
+        /* ---------- Settings: contact details save (wire to your backend endpoint) ---------- */
+        document.getElementById('settingsSaveBtn').addEventListener('click', () => {
+            const status = document.getElementById('settingsStatus');
+            status.className = 'settings-note';
+            status.textContent = 'Saving…';
+
+            const payload = {
+                name: document.getElementById('settingsName').value,
+                email: document.getElementById('settingsEmail').value,
+                phone: document.getElementById('settingsPhone').value,
+                address: document.getElementById('settingsAddress').value,
+                city: document.getElementById('settingsCity').value,
+            };
+
+            // Placeholder request — point this at your real "update profile" endpoint.
+            fetch("{% url 'update_profile' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+                body: JSON.stringify(payload),
+            })
+                .then(r => {
+                    if (!r.ok) throw new Error('Save failed');
+                    return r.json();
+                })
+                .then(() => {
+                    status.className = 'settings-note success';
+                    status.textContent = 'Saved successfully.';
+                })
+                .catch(() => {
+                    status.className = 'settings-note error';
+                    status.textContent = 'Could not save changes — endpoint "update_profile" not set up yet.';
+                });
+        });
+
+        /* ---------- Settings: password change (wire to your backend endpoint) ---------- */
+        document.getElementById('passwordSaveBtn').addEventListener('click', () => {
+            const status = document.getElementById('passwordStatus');
+            const current = document.getElementById('currentPassword').value;
+            const next = document.getElementById('newPassword').value;
+            const confirm = document.getElementById('confirmPassword').value;
+
+            if (!current || !next || !confirm) {
+                status.className = 'settings-note error';
+                status.textContent = 'Please fill in all three password fields.';
+                return;
+            }
+            if (next !== confirm) {
+                status.className = 'settings-note error';
+                status.textContent = 'New password and confirmation do not match.';
+                return;
+            }
+            if (next.length < 8) {
+                status.className = 'settings-note error';
+                status.textContent = 'New password must be at least 8 characters.';
+                return;
+            }
+
+            status.className = 'settings-note';
+            status.textContent = 'Updating…';
+
+            // Placeholder request — point this at Django's password-change endpoint
+            // (e.g. wrap django.contrib.auth.views.PasswordChangeView as a JSON API,
+            // or build a small custom view using django.contrib.auth's
+            // check_password / set_password helpers).
+            fetch("{% url 'change_password' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+                body: JSON.stringify({
+                    current_password: current,
+                    new_password: next,
+                }),
+            })
+                .then(r => {
+                    if (!r.ok) throw new Error('Password update failed');
+                    return r.json();
+                })
+                .then(() => {
+                    status.className = 'settings-note success';
+                    status.textContent = 'Password updated successfully.';
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                })
+                .catch(() => {
+                    status.className = 'settings-note error';
+                    status.textContent = 'Could not update password — endpoint "change_password" not set up yet.';
+                });
+        });
+
         fetch("{% url 'client_dashboard_data' %}")
             .then(r => r.json())
             .then(data => {
@@ -523,45 +1165,83 @@
                 buildPie(document.getElementById('paymentStatusChart'), data.payment_status.labels, data.payment_status.counts);
                 buildPie(document.getElementById('paymentMethodChart'), data.payment_method.labels, data.payment_method.counts);
 
-                const tbody = document.getElementById('ordersTableBody');
-                tbody.innerHTML = '';
+                // ---- Split combined order list into Orders vs Bookings ----
+                const ordersBody = document.getElementById('ordersOnlyTableBody');
+                const bookingsBody = document.getElementById('bookingsTableBody');
+                ordersBody.innerHTML = '';
+                bookingsBody.innerHTML = '';
 
-                if (!data.orders.length) {
-                    tbody.innerHTML = '<tr><td colspan="8" class="empty-note">You have not placed any orders yet.</td></tr>';
-                    return;
+                const orders = data.orders.filter(o => !isBooking(o));
+                const bookings = data.orders.filter(isBooking);
+
+                document.getElementById('navOrdersBadge').textContent = orders.length;
+                document.getElementById('navOrdersBadge').classList.toggle('show', orders.length > 0);
+                document.getElementById('navBookingsBadge').textContent = bookings.length;
+                document.getElementById('navBookingsBadge').classList.toggle('show', bookings.length > 0);
+
+                if (!orders.length) {
+                    ordersBody.innerHTML = '<tr><td colspan="7" class="empty-note">You have not placed any orders yet.</td></tr>';
+                } else {
+                    orders.forEach(o => ordersBody.appendChild(renderRow(o)));
                 }
 
-                data.orders.forEach(o => {
-                    const tr = document.createElement('tr');
-                    if (o.needs_payment_soon) tr.classList.add('urgent');
-
-                    let paymentCell;
-                    if (o.payment_status) {
-                        paymentCell = o.payment_status;
-                    } else if (o.payment_deadline) {
-                        paymentCell = `<span class="pay-badge" data-deadline="${o.payment_deadline}">Calculating…</span>`;
-                    } else {
-                        paymentCell = '—';
-                    }
-
-                    tr.innerHTML = `
-                        <td>${o.product}</td>
-                        <td>${o.quantity}</td>
-                        <td>${fmtMoney(o.total_price)}</td>
-                        <td><span class="type-pill">${o.order_type}</span></td>
-                        <td>${o.requested_date ?? '—'}</td>
-                        <td><span class="status-pill ${statusPillClass(o.status_raw)}">${o.status}</span></td>
-                        <td>${paymentCell}</td>
-                        <td>${o.created_at}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
+                if (!bookings.length) {
+                    bookingsBody.innerHTML = '<tr><td colspan="7" class="empty-note">You have not made any bookings yet.</td></tr>';
+                } else {
+                    bookings.forEach(o => bookingsBody.appendChild(renderRow(o)));
+                }
 
                 startCountdowns(data.orders);
+
+                // ---- Account Info: fill in whatever the backend provides ----
+                // Expected shape (adjust to match your real customer/user model):
+                // data.customer = {
+                //   name, username, email, phone, address, city, customer_id,
+                //   is_active, date_joined, last_login, role, permissions: [{name, granted}]
+                // }
+                if (data.customer) {
+                    const c = data.customer;
+                    document.getElementById('infoName').textContent = fmtVal(c.name);
+                    document.getElementById('infoUsername').textContent = fmtVal(c.username);
+                    document.getElementById('infoEmail').textContent = fmtVal(c.email);
+                    document.getElementById('infoPhone').textContent = fmtVal(c.phone);
+                    document.getElementById('infoAddress').textContent = fmtVal(c.address);
+                    document.getElementById('infoCity').textContent = fmtVal(c.city);
+                    document.getElementById('infoCustomerId').textContent = fmtVal(c.customer_id);
+                    document.getElementById('infoDateJoined').textContent = fmtVal(c.date_joined);
+                    document.getElementById('infoLastLogin').textContent = fmtVal(c.last_login);
+
+                    const statusEl = document.getElementById('infoStatus');
+                    const isActive = c.is_active !== false;
+                    statusEl.textContent = isActive ? 'Active' : 'Inactive';
+                    statusEl.classList.toggle('inactive', !isActive);
+
+                    document.getElementById('infoRole').textContent = c.role || 'Customer';
+
+                    const permsEl = document.getElementById('infoPermissions');
+                    if (Array.isArray(c.permissions) && c.permissions.length) {
+                        permsEl.innerHTML = '';
+                        c.permissions.forEach(p => {
+                            const pill = document.createElement('span');
+                            pill.className = 'perm-pill' + (p.granted ? ' granted' : '');
+                            pill.textContent = p.name;
+                            permsEl.appendChild(pill);
+                        });
+                    }
+
+                    // Pre-fill editable settings fields too
+                    document.getElementById('settingsName').value = c.name ?? '';
+                    document.getElementById('settingsEmail').value = c.email ?? '';
+                    document.getElementById('settingsPhone').value = c.phone ?? '';
+                    document.getElementById('settingsAddress').value = c.address ?? '';
+                    document.getElementById('settingsCity').value = c.city ?? '';
+                }
             })
             .catch(() => {
-                document.getElementById('ordersTableBody').innerHTML =
-                    '<tr><td colspan="8" class="empty-note">Could not load your orders. Please refresh.</td></tr>';
+                document.getElementById('ordersOnlyTableBody').innerHTML =
+                    '<tr><td colspan="7" class="empty-note">Could not load your orders. Please refresh.</td></tr>';
+                document.getElementById('bookingsTableBody').innerHTML =
+                    '<tr><td colspan="7" class="empty-note">Could not load your bookings. Please refresh.</td></tr>';
             });
     </script>
 

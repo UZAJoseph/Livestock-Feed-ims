@@ -6,6 +6,8 @@ from django.conf.urls.static import static
 
 
 urlpatterns = [
+    path('client-dashboard/update-profile/', views.update_profile, name='update_profile'),
+path('client-dashboard/change-password/', views.change_password, name='change_password'),
     path('dashboard/restock-ledger-data/', views.restock_ledger_data, name='restock_ledger_data'),
 path('dashboard/booking-stats-data/', views.booking_stats_data, name='booking_stats_data'),
 path('my-dashboard/', views.client_dashboard, name='client_dashboard'),
